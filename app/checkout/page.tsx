@@ -16,7 +16,9 @@ export default function CheckoutPage() {
   const [orderId] = useState(generateOrderId());
   const [orderPlaced, setOrderPlaced] = useState(false);
 
-  const subtotal = items.reduce((acc, i) => acc + i.product.price * i.quantity, 0);
+  // Use KSh 1 per item for checkout totals to match OrderSummary
+  const PRICE_PER_ITEM = 1;
+  const subtotal = items.reduce((acc, i) => acc + PRICE_PER_ITEM * i.quantity, 0);
   const shipping = subtotal >= 400 ? 0 : 5.99;
   const tax = calculateTax(subtotal);
   const total = subtotal + shipping + tax;
@@ -71,7 +73,7 @@ export default function CheckoutPage() {
           <div className="payment-section">
             <h2 className="section-title">Payment Method</h2>
             <MpesaPaymentForm
-              amount={Math.round(total * 130)} // Convert USD to KES (rough rate)
+              amount={Math.round(total)}
               orderId={orderId}
               onSuccess={handleSuccess}
             />

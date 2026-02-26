@@ -24,7 +24,6 @@ export interface User {
 
 export interface Collaborator {
   user: User;
-  role: 'Owner' | 'Editor' | 'Viewer';
   status: 'active' | 'pending';
 }
 

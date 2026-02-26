@@ -12,6 +12,7 @@ export const mockUsers: User[] = [
   { id: 'user-2', name: 'Jordan Smith', email: 'jordan@example.com', initials: 'JS' },
   { id: 'user-3', name: 'Taylor Morgan', email: 'taylor@example.com', initials: 'TM' },
   { id: 'user-4', name: 'Casey Lee', email: 'casey@example.com', initials: 'CL' },
+  { id: 'user-5', name: 'Riley Davis', email: 'riley@example.com', initials: 'RD' },
 ];
 
 export const mockCollaborativeShop: CollaborativeShop = {
@@ -20,10 +21,11 @@ export const mockCollaborativeShop: CollaborativeShop = {
   createdBy: mockUsers[0],
   lastActive: '2 mins ago',
   collaborators: [
-    { user: mockUsers[0], role: 'Owner', status: 'active' },
-    { user: mockUsers[1], role: 'Editor', status: 'active' },
-    { user: mockUsers[2], role: 'Viewer', status: 'active' },
-    { user: mockUsers[3], role: 'Viewer', status: 'pending' },
+    { user: mockUsers[0], status: 'active' },
+    { user: mockUsers[1], status: 'active' },
+    { user: mockUsers[2], status: 'active' },
+    { user: mockUsers[3], status: 'pending' },
+    { user: mockUsers[4], status: 'pending' },
   ],
   cartTotal: 325.00,
   cartGoal: 500.00,
@@ -31,7 +33,7 @@ export const mockCollaborativeShop: CollaborativeShop = {
     {
       id: '9',
       name: 'Festoon Party Lights (25m)',
-      price: 45.00,
+      price: 1.00,
       description: 'Weatherproof outdoor string lights, perfect for summer nights.',
       image: 'https://images.unsplash.com/photo-1530103862676-de8c9debad1d?w=400',
       category: 'Home',
@@ -43,7 +45,7 @@ export const mockCollaborativeShop: CollaborativeShop = {
     {
       id: '10',
       name: 'Waterproof JBL Speaker',
-      price: 89.99,
+      price: 1.00,
       description: 'Bass-heavy portable speaker with 12-hour battery life and IPX7 rating.',
       image: 'https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?w=400',
       category: 'Electronics',
@@ -54,7 +56,7 @@ export const mockCollaborativeShop: CollaborativeShop = {
     {
       id: '11',
       name: 'Instax Mini 11 Bundle',
-      price: 110.00,
+      price: 1.00,
       description: 'Capture memories instantly. Bundle includes 20 film sheets and a carry case.',
       image: 'https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?w=400',
       category: 'Electronics',

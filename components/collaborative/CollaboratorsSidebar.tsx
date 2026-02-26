@@ -1,6 +1,7 @@
 'use client';
 
 import { Collaborator } from '@/types';
+import { formatCurrency } from '@/lib/utils';
 
 interface CollaboratorsListProps {
   collaborators: Collaborator[];
@@ -23,7 +24,7 @@ export default function CollaboratorsSidebar({
       <div className="widget">
         <h3 className="widget-title">Shared Cart Progress</h3>
         <div className="cart-total">
-          ${cartTotal.toFixed(2)}
+          {formatCurrency(cartTotal)}
         </div>
         <div className="progress-bar-wrap">
           <div
@@ -32,8 +33,8 @@ export default function CollaboratorsSidebar({
           />
         </div>
         <div className="progress-labels">
-          <span>$0.00</span>
-          <span>Goal: ${cartGoal.toFixed(0)} for Free Shipping</span>
+          <span>{formatCurrency(0)}</span>
+          <span>Goal: {formatCurrency(cartGoal)} for Free Shipping</span>
         </div>
       </div>
 
@@ -58,14 +59,13 @@ export default function CollaboratorsSidebar({
               </div>
               <div className="collab-info">
                 <span className="collab-name">{c.user.name}</span>
-                <span className={`collab-role ${c.role.toLowerCase()}`}>{c.role}</span>
               </div>
             </li>
           ))}
         </ul>
 
         <button className="manage-btn" onClick={onManagePermissions}>
-          Manage Permissions
+          Invite
         </button>
       </div>
 
@@ -173,11 +173,7 @@ export default function CollaboratorsSidebar({
           font-weight: 600;
           color: #1a0533;
         }
-        .collab-role {
-          font-size: 0.75rem;
-          color: #7a6898;
-        }
-        .collab-role.owner { color: #7000ff; font-weight: 600; }
+        /* roles removed; collaborators are shown without role labels */
         .manage-btn {
           width: 100%;
           margin-top: 1rem;

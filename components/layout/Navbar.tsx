@@ -1,7 +1,9 @@
 'use client';
 
 import Link from 'next/link';
-import { ShoppingCart, Search, Users } from 'lucide-react';
+import { ShoppingCart, Search } from 'lucide-react';
+import { openInviteCollaborators } from '@/components/shop/inviteCollaborators';
+import { mockCollaborativeShop } from '@/data/users';
 import { useCartStore } from '@/lib/cart-store';
 import { mockCurrentUser } from '@/data/users';
 
@@ -31,7 +33,11 @@ export default function Navbar() {
 
         {/* Actions */}
         <div className="navbar-actions">
-          <Link href="/collaborative-shop" className="navbar-link">
+          <Link
+            href="/collaborative-shop"
+            className="navbar-link"
+            onClick={() => openInviteCollaborators(mockCollaborativeShop.name)}
+          >
             Collaborative Shop
           </Link>
           <Link href="/receipts" className="navbar-link">
@@ -56,15 +62,15 @@ export default function Navbar() {
           position: sticky;
           top: 0;
           z-index: 50;
-          background: #fff;
+          background: #fbf7ff; /* subtle purple tint like the design */
           border-bottom: 1px solid #f0eeff;
-          box-shadow: 0 1px 12px rgba(112, 0, 255, 0.06);
+          box-shadow: 0 1px 18px rgba(112, 0, 255, 0.06);
         }
         .navbar-inner {
           max-width: 1280px;
           margin: 0 auto;
           padding: 0 1.5rem;
-          height: 64px;
+          height: 72px; /* slightly taller header */
           display: flex;
           align-items: center;
           gap: 1.5rem;
@@ -79,43 +85,49 @@ export default function Navbar() {
           color: #1a0533;
         }
         .navbar-logo-icon {
-          width: 36px;
-          height: 36px;
+          width: 40px;
+          height: 40px;
           background: #7000ff;
           color: white;
-          border-radius: 10px;
+          border-radius: 12px;
           display: flex;
           align-items: center;
           justify-content: center;
+          box-shadow: 0 6px 18px rgba(112, 0, 255, 0.12);
         }
         .navbar-search {
           flex: 1;
-          max-width: 480px;
+          max-width: 720px; /* allow wider centered search */
           position: relative;
+          margin: 0 auto; /* center visually between logo and actions */
+          align-self: center; /* don't stretch to full header height */
         }
         .navbar-search-icon {
           position: absolute;
-          left: 12px;
+          left: 18px; /* a bit more inset to sit nicely inside the input */
           top: 50%;
           transform: translateY(-50%);
           color: #9b8cc4;
+          pointer-events: none;
         }
         .navbar-search-input {
           width: 100%;
-          padding: 0.5rem 1rem 0.5rem 2.5rem;
-          background: #f5f0ff;
-          border: 1px solid #e8e0ff;
+          padding: 0.7rem 1.1rem 0.7rem 3rem;
+          background: #f8f5ff;
+          border: 1px solid #e9e2ff;
           border-radius: 999px;
-          font-size: 0.9rem;
+          font-size: 0.95rem;
           color: #1a0533;
           outline: none;
-          transition: border-color 0.2s;
+          transition: border-color 0.2s, box-shadow 0.2s;
+          box-shadow: 0 8px 28px rgba(112, 0, 255, 0.06);
         }
         .navbar-search-input:focus {
           border-color: #7000ff;
+          box-shadow: 0 10px 36px rgba(112, 0, 255, 0.10);
         }
         .navbar-search-input::placeholder {
-          color: #b0a0d0;
+          color: #cbbef3;
         }
         .navbar-actions {
           display: flex;
@@ -140,25 +152,28 @@ export default function Navbar() {
           align-items: center;
           padding: 0.4rem;
           border-radius: 50%;
-          transition: background 0.2s;
+          transition: background 0.2s, transform 0.12s;
         }
+        .navbar-cart:active { transform: translateY(1px); }
         .navbar-cart:hover {
           background: #f5f0ff;
         }
         .navbar-cart-badge {
           position: absolute;
-          top: -4px;
-          right: -4px;
-          width: 18px;
+          top: -6px;
+          right: -6px;
+          min-width: 18px;
           height: 18px;
+          padding: 0 4px;
           background: #7000ff;
           color: white;
           font-size: 0.65rem;
           font-weight: 700;
-          border-radius: 50%;
+          border-radius: 99px;
           display: flex;
           align-items: center;
           justify-content: center;
+          box-shadow: 0 4px 10px rgba(112,0,255,0.12);
         }
         .navbar-avatar {
           width: 36px;
@@ -173,6 +188,20 @@ export default function Navbar() {
           justify-content: center;
           cursor: pointer;
         }
+        .navbar-invite {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          width: 36px;
+          height: 36px;
+          background: transparent;
+          border: none;
+          color: #4a3870;
+          border-radius: 8px;
+          cursor: pointer;
+          transition: background 0.15s, color 0.15s;
+        }
+        .navbar-invite:hover { background: #f5f0ff; color: #7000ff; }
       `}</style>
     </nav>
   );

@@ -10,7 +10,9 @@ interface OrderSummaryProps {
 }
 
 export default function OrderSummary({ items, onPlaceOrder, loading }: OrderSummaryProps) {
-  const subtotal = items.reduce((acc, i) => acc + i.product.price * i.quantity, 0);
+  // All products are priced at KSh 1 each in the Order Summary
+  const PRICE_PER_ITEM = 1;
+  const subtotal = items.reduce((acc, i) => acc + PRICE_PER_ITEM * i.quantity, 0);
   const shipping = subtotal >= 400 ? 0 : 5.99;
   const tax = calculateTax(subtotal);
   const total = subtotal + shipping + tax;
@@ -29,9 +31,9 @@ export default function OrderSummary({ items, onPlaceOrder, loading }: OrderSumm
               <span className="item-name">{item.product.name}</span>
               <span className="item-qty">Qty: {item.quantity}</span>
             </div>
-            <span className="item-price">
-              {formatCurrency(item.product.price * item.quantity)}
-            </span>
+              <span className="item-price">
+                {formatCurrency(PRICE_PER_ITEM * item.quantity)}
+              </span>
           </div>
         ))}
       </div>
