@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { X, Mail, Users, Check } from 'lucide-react';
 import { useInviteStore } from '@/lib/invite-store';
-import { mockCollaborativeShop, mockCurrentUser } from '@/data/users';
+import { mockCurrentUser } from '@/data/users';
 import { Collaborator } from '@/types';
 
 interface InviteCollaboratorsProps {
@@ -29,8 +29,8 @@ export default function InviteCollaboratorsModal({
   const shopNameFinal = shopName ?? store.shopName ?? 'Shop';
   const [cartName, setCartName] = useState(shopNameFinal);
 
-  // members: use mock data for collaborative shop when available
-  const members: Collaborator[] = mockCollaborativeShop?.collaborators ?? [];
+  // members: show collaborators from the invite store
+  const members: Collaborator[] = store.collaborators;
 
   if (!isOpenFinal) return null;
 
@@ -41,9 +41,14 @@ export default function InviteCollaboratorsModal({
   };
 
   const handleSendInvites = () => {
+    // Persist cart name + owner first
+    handleSaveCartName();
+    // Persist invited emails as collaborators
+    store.addCollaborators(invites);
     setSent(true);
     setTimeout(() => {
       setSent(false);
+      setInvites([]);
       onCloseFinal();
     }, 1500);
   };
