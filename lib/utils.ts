@@ -1,12 +1,12 @@
-export function formatCurrency(amount: number, currency = 'USD'): string {
-  return new Intl.NumberFormat('en-US', {
+export function formatCurrency(amount: number, currency = 'KES'): string {
+  return new Intl.NumberFormat('en-KE', {
     style: 'currency',
     currency,
   }).format(amount);
 }
 
 export function formatKES(amount: number): string {
-  return `KES ${amount.toLocaleString('en-KE', { minimumFractionDigits: 2 })}`;
+  return `KSh ${amount.toLocaleString('en-KE', { minimumFractionDigits: 2 })}`;
 }
 
 export function calculateTax(subtotal: number, rate = 0.08): number {

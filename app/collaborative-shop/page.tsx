@@ -5,16 +5,26 @@ import { Plus, Settings } from 'lucide-react';
 import Navbar from '@/components/layout/Navbar';
 import CollaboratorsSidebar from '@/components/collaborative/CollaboratorsSidebar';
 import InviteCollaboratorsModal from '@/components/collaborative/InviteCollaboratorsModal';
+import { openInviteCollaborators } from '@/components/shop/inviteCollaborators';
 import { mockCollaborativeShop } from '@/data/users';
 import { formatCurrency } from '@/lib/utils';
+import { useInviteStore } from '@/lib/invite-store';
 
 const TABS = ['Products', 'Discussion', 'Activity Log'] as const;
 type Tab = typeof TABS[number];
 
 export default function CollaborativeShopPage() {
   const [activeTab, setActiveTab] = useState<Tab>('Products');
-  const [showInviteModal, setShowInviteModal] = useState(false);
-  const shop = mockCollaborativeShop;
+  const store = useInviteStore();
+
+  const shop = {
+    ...mockCollaborativeShop,
+    name: store.shopName ?? mockCollaborativeShop.name,
+    createdBy: store.createdBy ?? mockCollaborativeShop.createdBy,
+    lastActive: store.createdAt
+      ? new Date(store.createdAt).toLocaleString()
+      : mockCollaborativeShop.lastActive,
+  };
 
   return (
     <>
@@ -42,7 +52,7 @@ export default function CollaborativeShopPage() {
           <div className="header-actions">
             <button
               className="invite-btn"
-              onClick={() => setShowInviteModal(true)}
+              onClick={() => openInviteCollaborators(shop.name)}
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
@@ -64,7 +74,7 @@ export default function CollaborativeShopPage() {
             collaborators={shop.collaborators}
             cartTotal={shop.cartTotal}
             cartGoal={shop.cartGoal}
-            onManagePermissions={() => setShowInviteModal(true)}
+            onManagePermissions={() => openInviteCollaborators(shop.name)}
           />
 
           <div className="products-section">
@@ -144,11 +154,7 @@ export default function CollaborativeShopPage() {
         </div>
       </main>
 
-      <InviteCollaboratorsModal
-        isOpen={showInviteModal}
-        onClose={() => setShowInviteModal(false)}
-        shopName={shop.name}
-      />
+      <InviteCollaboratorsModal />
 
       <style jsx>{`
         .main {

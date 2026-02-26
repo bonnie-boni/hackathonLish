@@ -4,7 +4,7 @@ export const mockProducts: Product[] = [
   {
     id: '1',
     name: 'Artisan Garden Salad',
-    price: 12.50,
+    price: 1.00,
     description: 'Freshly picked organic greens, cherry tomatoes, and balsamic glaze.',
     image: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400',
     category: 'Food',
@@ -14,7 +14,7 @@ export const mockProducts: Product[] = [
   {
     id: '2',
     name: 'Premium Cotton Tee',
-    price: 29.00,
+    price: 1.00,
     description: 'Ultra-soft 100% sustainable cotton. Available in 5 colors.',
     image: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=400',
     category: 'Clothing',
@@ -23,7 +23,7 @@ export const mockProducts: Product[] = [
   {
     id: '3',
     name: 'Citrus Fusion Soda',
-    price: 4.95,
+    price: 1.00,
     description: 'Natural sparkling water with cold-pressed orange and lime.',
     image: 'https://images.unsplash.com/photo-1544145945-f90425340c7e?w=400',
     category: 'Drinks',
@@ -32,7 +32,7 @@ export const mockProducts: Product[] = [
   {
     id: '4',
     name: 'Classic Craft Burger',
-    price: 15.00,
+    price: 1.00,
     description: 'Grass-fed beef, aged cheddar, and house sauce on brioche.',
     image: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400',
     category: 'Food',
@@ -41,7 +41,7 @@ export const mockProducts: Product[] = [
   {
     id: '5',
     name: 'Vintage Denim Jacket',
-    price: 85.00,
+    price: 1.00,
     description: 'Classic fit denim with reinforced stitching and bronze buttons.',
     image: 'https://images.unsplash.com/photo-1551537482-f2075a1d41f2?w=400',
     category: 'Clothing',
@@ -51,7 +51,7 @@ export const mockProducts: Product[] = [
   {
     id: '6',
     name: 'Dark Cocoa Collection',
-    price: 18.99,
+    price: 1.00,
     description: 'A set of 4 artisanal dark chocolate bars from South America.',
     image: 'https://images.unsplash.com/photo-1606312619070-d48b4c652a52?w=400',
     category: 'Food',
@@ -60,7 +60,7 @@ export const mockProducts: Product[] = [
   {
     id: '7',
     name: 'Wireless Studio Headphones',
-    price: 199.00,
+    price: 1.00,
     description: 'Premium sound with 30hr battery life and active noise cancellation.',
     image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400',
     category: 'Electronics',
@@ -70,7 +70,7 @@ export const mockProducts: Product[] = [
   {
     id: '8',
     name: 'Minimalist Watch',
-    price: 120.00,
+    price: 1.00,
     description: 'Swiss quartz movement with a sapphire crystal dial.',
     image: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400',
     category: 'Accessories',
@@ -79,7 +79,7 @@ export const mockProducts: Product[] = [
   {
     id: '9',
     name: 'Festoon Party Lights (25m)',
-    price: 45.00,
+    price: 1.00,
     description: 'Weatherproof outdoor string lights, perfect for summer nights.',
     image: 'https://images.unsplash.com/photo-1530103862676-de8c9debad1d?w=400',
     category: 'Home',
@@ -89,7 +89,7 @@ export const mockProducts: Product[] = [
   {
     id: '10',
     name: 'Waterproof JBL Speaker',
-    price: 89.99,
+    price: 1.00,
     description: 'Bass-heavy portable speaker with 12-hour battery life and IPX7 rating.',
     image: 'https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?w=400',
     category: 'Electronics',
@@ -98,7 +98,7 @@ export const mockProducts: Product[] = [
   {
     id: '11',
     name: 'Instax Mini 11 Bundle',
-    price: 110.00,
+    price: 1.00,
     description: 'Capture memories instantly. Bundle includes 20 film sheets and a carry case.',
     image: 'https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?w=400',
     category: 'Electronics',
@@ -108,7 +108,7 @@ export const mockProducts: Product[] = [
   {
     id: '12',
     name: 'Wireless Noise-Canceling Headphones',
-    price: 299.00,
+    price: 1.00,
     description: 'Industry-leading noise cancellation with Hi-Res Audio.',
     image: 'https://images.unsplash.com/photo-1583394838336-acd977736f90?w=400',
     category: 'Electronics',
