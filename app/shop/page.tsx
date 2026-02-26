@@ -1,3 +1,4 @@
+'use client'
 import Navbar from '@/components/layout/Navbar';
 import ProductGrid from '@/components/shop/ProductGrid';
 import { mockProducts } from '@/data/products';
