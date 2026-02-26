@@ -20,23 +20,6 @@ export default function CollaboratorsSidebar({
 
   return (
     <aside className="sidebar">
-      {/* Cart Progress */}
-      <div className="widget">
-        <h3 className="widget-title">Shared Cart Progress</h3>
-        <div className="cart-total">
-          {formatCurrency(cartTotal)}
-        </div>
-        <div className="progress-bar-wrap">
-          <div
-            className="progress-bar-fill"
-            style={{ width: `${progress}%` }}
-          />
-        </div>
-        <div className="progress-labels">
-          <span>{formatCurrency(0)}</span>
-          <span>Goal: {formatCurrency(cartGoal)} for Free Shipping</span>
-        </div>
-      </div>
 
       {/* Collaborators */}
       <div className="widget">

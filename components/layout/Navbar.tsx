@@ -3,7 +3,6 @@
 import Link from 'next/link';
 import { ShoppingCart, Search } from 'lucide-react';
 import { openInviteCollaborators } from '@/components/shop/inviteCollaborators';
-import { mockCollaborativeShop } from '@/data/users';
 import { useCartStore } from '@/lib/cart-store';
 import { mockCurrentUser } from '@/data/users';
 
@@ -33,13 +32,18 @@ export default function Navbar() {
 
         {/* Actions */}
         <div className="navbar-actions">
-          <Link
-            href="/collaborative-shop"
-            className="navbar-link"
-            onClick={() => openInviteCollaborators(mockCollaborativeShop.name)}
+          <button
+            className="navbar-invite-btn"
+            onClick={() => openInviteCollaborators()}
           >
-            Collaborative Shop
-          </Link>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
+              <circle cx="8.5" cy="7" r="4"/>
+              <line x1="20" y1="8" x2="20" y2="14"/>
+              <line x1="23" y1="11" x2="17" y2="11"/>
+            </svg>
+            Invite
+          </button>
           <Link href="/receipts" className="navbar-link">
             Receipts
           </Link>
@@ -175,6 +179,21 @@ export default function Navbar() {
           justify-content: center;
           box-shadow: 0 4px 10px rgba(112,0,255,0.12);
         }
+        .navbar-invite-btn {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          padding: 0.5rem 1rem;
+          background: #7000ff;
+          color: white;
+          border: none;
+          border-radius: 10px;
+          font-size: 0.85rem;
+          font-weight: 600;
+          cursor: pointer;
+          transition: background 0.2s;
+        }
+        .navbar-invite-btn:hover { background: #5900cc; }
         .navbar-avatar {
           width: 36px;
           height: 36px;

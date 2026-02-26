@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ShoppingCart, Eye, EyeOff, Mail, Lock } from 'lucide-react';
 import { mockLoginCredentials } from '@/data/users';
+import { createClient } from '@/lib/supabase/client';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -17,14 +18,37 @@ export default function LoginPage() {
     setError('');
     setLoading(true);
 
-    await new Promise((r) => setTimeout(r, 800)); // simulate network
+    try {
+      const supabase = createClient();
+      const { error: authError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
-    if (
-      email === mockLoginCredentials.email &&
-      password === mockLoginCredentials.password
-    ) {
+      if (authError) {
+        // Fallback to mock credentials for demo
+        if (
+          email === mockLoginCredentials.email &&
+          password === mockLoginCredentials.password
+        ) {
+          router.push('/shop');
+          return;
+        }
+        setError('Invalid email or password. Try alex@example.com / password123');
+        setLoading(false);
+        return;
+      }
+
       router.push('/shop');
-    } else {
+    } catch {
+      // Fallback to mock credentials
+      if (
+        email === mockLoginCredentials.email &&
+        password === mockLoginCredentials.password
+      ) {
+        router.push('/shop');
+        return;
+      }
       setError('Invalid email or password. Try alex@example.com / password123');
       setLoading(false);
     }
