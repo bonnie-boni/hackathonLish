@@ -179,7 +179,7 @@ export default function Navbar() {
           min-width: 20px;
           height: 20px;
           padding: 0 5px;
-          background: rgb(0, 255, 60);
+          background: rgb(127, 0, 255);
           color: white;
           font-size: 0.7rem;
           font-weight: 700;
