@@ -67,6 +67,13 @@ export default function CheckoutPage() {
         <h1 className="page-title">Checkout</h1>
 
         <div className="checkout-layout">
+          {/* Order Summary */}
+          <OrderSummary
+            items={items}
+            onPlaceOrder={() => {}}
+            loading={false}
+          />
+          
           {/* Payment */}
           <div className="payment-section">
             <h2 className="section-title">Payment Method</h2>
@@ -77,12 +84,7 @@ export default function CheckoutPage() {
             />
           </div>
 
-          {/* Order Summary */}
-          <OrderSummary
-            items={items}
-            onPlaceOrder={() => {}}
-            loading={false}
-          />
+          
         </div>
       </main>
 

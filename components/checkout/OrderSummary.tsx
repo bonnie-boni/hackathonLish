@@ -58,13 +58,6 @@ export default function OrderSummary({ items, onPlaceOrder, loading }: OrderSumm
         <span className="total-amount">{formatCurrency(total)}</span>
       </div>
 
-      <button
-        className="place-order-btn"
-        onClick={onPlaceOrder}
-        disabled={loading || items.length === 0}
-      >
-        {loading ? 'Processing...' : 'Place Order →'}
-      </button>
 
       <p className="tos-note">
         By placing your order, you agree to our{' '}
