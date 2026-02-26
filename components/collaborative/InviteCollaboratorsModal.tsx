@@ -1,12 +1,15 @@
 'use client';
 
 import { useState } from 'react';
-import { X, Mail, Users, Copy, Check } from 'lucide-react';
+import { X, Mail, Users, Check } from 'lucide-react';
+import { useInviteStore } from '@/lib/invite-store';
+import { mockCurrentUser } from '@/data/users';
+import { Collaborator } from '@/types';
 
 interface InviteCollaboratorsProps {
-  isOpen: boolean;
-  onClose: () => void;
-  shopName: string;
+  isOpen?: boolean;
+  onClose?: () => void;
+  shopName?: string;
 }
 
 export default function InviteCollaboratorsModal({
@@ -15,37 +18,51 @@ export default function InviteCollaboratorsModal({
   shopName,
 }: InviteCollaboratorsProps) {
   const [email, setEmail] = useState('');
-  const [role, setRole] = useState<'Editor' | 'Viewer'>('Editor');
-  const [invites, setInvites] = useState<{ email: string; role: string }[]>([]);
-  const [copied, setCopied] = useState(false);
+  const [invites, setInvites] = useState<string[]>([]);
   const [sent, setSent] = useState(false);
 
-  const shareLink = `https://modernshop.app/join/shop-1?invite=abc123`;
+  // Prefer external props; fall back to global invite store
+  const store = useInviteStore();
 
-  if (!isOpen) return null;
+  const isOpenFinal = typeof isOpen === 'boolean' ? isOpen : store.isOpen;
+  const onCloseFinal = onClose ?? store.close;
+  const shopNameFinal = shopName ?? store.shopName ?? 'Shop';
+  const [cartName, setCartName] = useState(shopNameFinal);
+
+  // members: show collaborators from the invite store
+  const members: Collaborator[] = store.collaborators;
+
+  if (!isOpenFinal) return null;
 
   const handleAddInvite = () => {
     if (!email || !email.includes('@')) return;
-    setInvites([...invites, { email, role }]);
+    setInvites([...invites, email]);
     setEmail('');
   };
 
   const handleSendInvites = () => {
+    // Persist cart name + owner first
+    handleSaveCartName();
+    // Persist invited emails as collaborators
+    store.addCollaborators(invites);
     setSent(true);
     setTimeout(() => {
       setSent(false);
-      onClose();
+      setInvites([]);
+      onCloseFinal();
     }, 1500);
   };
 
-  const handleCopyLink = () => {
-    navigator.clipboard.writeText(shareLink);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+  const handleSaveCartName = () => {
+    useInviteStore.getState().setShopName(cartName);
+    // if createdBy/createdAt not set, set them to current user and now
+    const st = useInviteStore.getState();
+    if (!st.createdBy) useInviteStore.getState().setCreatedBy(mockCurrentUser);
+    if (!st.createdAt) useInviteStore.getState().setCreatedAt(new Date().toISOString());
   };
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
+    <div className="modal-overlay" onClick={onCloseFinal}>
       <div className="modal" onClick={(e) => e.stopPropagation()}>
         {/* Header */}
         <div className="modal-header">
@@ -55,27 +72,29 @@ export default function InviteCollaboratorsModal({
             </div>
             <div>
               <h2 className="modal-title">Invite Collaborators</h2>
-              <p className="modal-subtitle">Add people to <strong>{shopName}</strong></p>
+              <p className="modal-subtitle">Add people to <strong>{shopNameFinal}</strong></p>
             </div>
           </div>
-          <button className="modal-close" onClick={onClose}>
+          <button className="modal-close" onClick={onCloseFinal}>
             <X size={20} />
           </button>
         </div>
 
-        {/* Share Link */}
+        {/* Cart name (editable) */}
         <div className="section">
-          <label className="section-label">Share Link</label>
+          <label className="section-label">Cart Name</label>
           <div className="link-row">
-            <span className="link-text">{shareLink}</span>
-            <button className="copy-btn" onClick={handleCopyLink}>
-              {copied ? <Check size={14} /> : <Copy size={14} />}
-              {copied ? 'Copied!' : 'Copy'}
-            </button>
+            <input
+              className="cart-name-input"
+              value={cartName}
+              onChange={(e) => setCartName(e.target.value)}
+              placeholder="My collaborative cart"
+            />
+            <button className="copy-btn" onClick={handleSaveCartName}>Save</button>
           </div>
         </div>
 
-        <div className="divider"><span>or invite by email</span></div>
+        <div className="divider"><span>Members</span></div>
 
         {/* Email Input */}
         <div className="section">
@@ -92,14 +111,6 @@ export default function InviteCollaboratorsModal({
                 className="email-input"
               />
             </div>
-            <select
-              value={role}
-              onChange={(e) => setRole(e.target.value as 'Editor' | 'Viewer')}
-              className="role-select"
-            >
-              <option value="Editor">Editor</option>
-              <option value="Viewer">Viewer</option>
-            </select>
             <button className="add-btn" onClick={handleAddInvite}>Add</button>
           </div>
         </div>
@@ -107,11 +118,10 @@ export default function InviteCollaboratorsModal({
         {/* Pending Invites */}
         {invites.length > 0 && (
           <div className="invites-list">
-            {invites.map((inv, i) => (
+            {invites.map((emailStr, i) => (
               <div key={i} className="invite-row">
-                <div className="invite-avatar">{inv.email[0].toUpperCase()}</div>
-                <span className="invite-email">{inv.email}</span>
-                <span className="invite-role">{inv.role}</span>
+                <div className="invite-avatar">{emailStr[0].toUpperCase()}</div>
+                <span className="invite-email">{emailStr}</span>
                 <button
                   className="remove-invite"
                   onClick={() => setInvites(invites.filter((_, j) => j !== i))}
@@ -123,19 +133,27 @@ export default function InviteCollaboratorsModal({
           </div>
         )}
 
-        {/* Role Legend */}
+        {/* Members List (current collaborators) */}
+        <div className="invites-list">
+          {members.map((m, idx) => (
+            <div key={m.user.id} className="invite-row">
+              <div className="invite-avatar">{m.user.initials}</div>
+              <span className="invite-email">{m.user.name}</span>
+              <span className="member-status">{m.status.toUpperCase()}</span>
+            </div>
+          ))}
+        </div>
+
+        {/* Note: Invited users can edit the shared cart */}
         <div className="role-info">
           <div className="role-info-item">
-            <strong>Editor</strong> — Can add/remove products
-          </div>
-          <div className="role-info-item">
-            <strong>Viewer</strong> — Can view and vote only
+            Invited collaborators can edit the shared cart.
           </div>
         </div>
 
         {/* Footer */}
         <div className="modal-footer">
-          <button className="cancel-btn" onClick={onClose}>Cancel</button>
+            <button className="cancel-btn" onClick={onCloseFinal}>Cancel</button>
           <button
             className="send-btn"
             onClick={handleSendInvites}
@@ -255,6 +273,14 @@ export default function InviteCollaboratorsModal({
           text-overflow: ellipsis;
           white-space: nowrap;
         }
+        .cart-name-input {
+          flex: 1;
+          border: none;
+          background: transparent;
+          font-size: 0.9rem;
+          padding: 0.35rem 0.5rem;
+          outline: none;
+        }
         .copy-btn {
           display: flex;
           align-items: center;
@@ -315,16 +341,6 @@ export default function InviteCollaboratorsModal({
           box-sizing: border-box;
         }
         .email-input:focus { border-color: #7000ff; }
-        .role-select {
-          padding: 0.55rem 0.75rem;
-          border: 1px solid #e8e0ff;
-          border-radius: 10px;
-          font-size: 0.85rem;
-          color: #4a3870;
-          background: white;
-          outline: none;
-          cursor: pointer;
-        }
         .add-btn {
           padding: 0.55rem 1rem;
           background: #f0e8ff;
@@ -343,13 +359,13 @@ export default function InviteCollaboratorsModal({
           flex-direction: column;
           gap: 0.5rem;
         }
-        .invite-row {
-          display: flex;
-          align-items: center;
-          gap: 0.75rem;
-          padding: 0.6rem 0.75rem;
-          background: #f8f5ff;
-          border-radius: 10px;
+        .member-status {
+          font-size: 0.68rem;
+          color: #7a6898;
+          background: #f5f0ff;
+          padding: 4px 8px;
+          border-radius: 999px;
+          font-weight: 600;
         }
         .invite-avatar {
           width: 28px;
@@ -368,14 +384,7 @@ export default function InviteCollaboratorsModal({
           font-size: 0.85rem;
           color: #1a0533;
         }
-        .invite-role {
-          font-size: 0.75rem;
-          color: #7000ff;
-          background: #f0e8ff;
-          padding: 2px 8px;
-          border-radius: 999px;
-          font-weight: 500;
-        }
+        /* role select and invite role removed - invites are emails only */
         .remove-invite {
           background: none;
           border: none;

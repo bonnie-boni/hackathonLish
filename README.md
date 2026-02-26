@@ -128,7 +128,7 @@ Open [http://localhost:3000](http://localhost:3000)
 
 - 🛒 **Cart** with Zustand (persists across page reloads)
 - 👥 **Collaborative Shopping** with real-time-style UI
-- 📧 **Invite Modal** — copy share link or send email invites by role
+- 📧 **Invite Modal** — copy share link or send email invites
 - 📄 **E-Receipt** — modal receipt viewer with download option
 - 📱 **M-Pesa Payment** — STK push with polling for confirmation
 - 📬 **Email Template** — HTML email for order confirmations

@@ -7,11 +7,13 @@ import ProductCard from './ProductCard';
 
 interface ProductGridProps {
   products: Product[];
+  title?: string;
+  subtitle?: string;
 }
 
 const CATEGORIES = ['All', 'Food', 'Drinks', 'Clothing', 'Electronics', 'Accessories', 'Home'];
 
-export default function ProductGrid({ products }: ProductGridProps) {
+export default function ProductGrid({ products, title, subtitle }: ProductGridProps) {
   const [sortBy, setSortBy] = useState('Newest');
   const [category, setCategory] = useState('All');
 
@@ -23,8 +25,8 @@ export default function ProductGrid({ products }: ProductGridProps) {
     <div className="grid-container">
       <div className="grid-header">
         <div className="grid-title-wrap">
-          <h2 className="grid-title">Our Products</h2>
-          <p className="grid-subtitle">Browse our curated selection of high-quality items.</p>
+          <h2 className="grid-title">{title ?? 'Our Products'}</h2>
+          <p className="grid-subtitle">{subtitle ?? 'Browse our curated selection of high-quality items.'}</p>
         </div>
         <div className="grid-controls">
           <div className="sort-select">

@@ -1,14 +1,22 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Navbar from '@/components/layout/Navbar';
 import ReceiptCard from '@/components/receipts/ReceiptCard';
 import EReceiptModal from '@/components/receipts/EReceiptModal';
 import { mockOrders } from '@/data/orders';
+import { fetchOrders } from '@/lib/supabase/queries';
 import { Order } from '@/types';
 
 export default function ReceiptsPage() {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [orders, setOrders] = useState<Order[]>(mockOrders);
+
+  useEffect(() => {
+    fetchOrders().then((data) => {
+      if (data.length > 0) setOrders(data);
+    });
+  }, []);
 
   return (
     <>
@@ -20,7 +28,7 @@ export default function ReceiptsPage() {
         </div>
 
         <div className="orders-list">
-          {mockOrders.map((order) => (
+          {orders.map((order) => (
             <ReceiptCard
               key={order.id}
               order={order}

@@ -1,7 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { ShoppingCart, Search, Users } from 'lucide-react';
+import { ShoppingCart, Search } from 'lucide-react';
+import { openInviteCollaborators } from '@/components/shop/inviteCollaborators';
 import { useCartStore } from '@/lib/cart-store';
 import { mockCurrentUser } from '@/data/users';
 
@@ -31,18 +32,29 @@ export default function Navbar() {
 
         {/* Actions */}
         <div className="navbar-actions">
-          <Link href="/collaborative-shop" className="navbar-link">
-            Collaborative Shop
-          </Link>
+          <button
+            className="navbar-invite-btn"
+            onClick={() => openInviteCollaborators()}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
+              <circle cx="8.5" cy="7" r="4"/>
+              <line x1="20" y1="8" x2="20" y2="14"/>
+              <line x1="23" y1="11" x2="17" y2="11"/>
+            </svg>
+            Invite
+          </button>
           <Link href="/receipts" className="navbar-link">
             Receipts
           </Link>
 
           <Link href="/checkout" className="navbar-cart">
-            <ShoppingCart size={20} />
-            {totalItems > 0 && (
-              <span className="navbar-cart-badge">{totalItems}</span>
-            )}
+            <span className="navbar-cart-icon" aria-hidden="true">
+              <ShoppingCart size={20} />
+              {totalItems > 0 && (
+                <span className="navbar-cart-badge">{totalItems}</span>
+              )}
+            </span>
           </Link>
 
           <div className="navbar-avatar">
@@ -56,15 +68,15 @@ export default function Navbar() {
           position: sticky;
           top: 0;
           z-index: 50;
-          background: #fff;
+          background: #fbf7ff; /* subtle purple tint like the design */
           border-bottom: 1px solid #f0eeff;
-          box-shadow: 0 1px 12px rgba(112, 0, 255, 0.06);
+          box-shadow: 0 1px 18px rgba(112, 0, 255, 0.06);
         }
         .navbar-inner {
           max-width: 1280px;
           margin: 0 auto;
           padding: 0 1.5rem;
-          height: 64px;
+          height: 72px; /* slightly taller header */
           display: flex;
           align-items: center;
           gap: 1.5rem;
@@ -79,43 +91,52 @@ export default function Navbar() {
           color: #1a0533;
         }
         .navbar-logo-icon {
-          width: 36px;
-          height: 36px;
+          width: 40px;
+          height: 40px;
           background: #7000ff;
           color: white;
-          border-radius: 10px;
+          border-radius: 12px;
           display: flex;
           align-items: center;
           justify-content: center;
+          box-shadow: 0 6px 18px rgba(112, 0, 255, 0.12);
         }
         .navbar-search {
-          flex: 1;
-          max-width: 480px;
           position: relative;
+          flex: 1;
+          max-width: 720px;
+          margin: 0 auto;
+          display: block;
         }
         .navbar-search-icon {
-          position: absolute;
-          left: 12px;
-          top: 50%;
+         position: absolute;
+          left: 16px; /* a bit more inset to sit nicely inside the input */
+          top:50%;
           transform: translateY(-50%);
+          z-index: 2;
           color: #9b8cc4;
+          pointer-events: none;
         }
         .navbar-search-input {
           width: 100%;
-          padding: 0.5rem 1rem 0.5rem 2.5rem;
-          background: #f5f0ff;
-          border: 1px solid #e8e0ff;
+          height: 44px;
+          padding-left: 44px;
+          padding-right: 16px;
+          background: #f8f5ff;
+          border: 1px solid #e9e2ff;
           border-radius: 999px;
-          font-size: 0.9rem;
+          font-size: 0.95rem;
           color: #1a0533;
           outline: none;
-          transition: border-color 0.2s;
+          transition: border-color 0.2s, box-shadow 0.2s;
+          box-shadow: 0 8px 28px rgba(112, 0, 255, 0.06);
         }
         .navbar-search-input:focus {
           border-color: #7000ff;
+          box-shadow: 0 10px 36px rgba(112, 0, 255, 0.10);
         }
         .navbar-search-input::placeholder {
-          color: #b0a0d0;
+          color: #cbbef3;
         }
         .navbar-actions {
           display: flex;
@@ -135,31 +156,74 @@ export default function Navbar() {
         }
         .navbar-cart {
           position: relative;
-          color: #4a3870;
+          color: #7000ff;
           display: flex;
           align-items: center;
+          justify-content: center;
           padding: 0.4rem;
           border-radius: 50%;
-          transition: background 0.2s;
+          transition: background 0.2s, transform 0.12s;
         }
+        .navbar-cart-icon {
+          position: relative;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+        }
+        .navbar-cart:active { transform: translateY(1px); }
         .navbar-cart:hover {
           background: #f5f0ff;
         }
         .navbar-cart-badge {
           position: absolute;
-          top: -4px;
-          right: -4px;
-          width: 18px;
-          height: 18px;
-          background: #7000ff;
+          top: 0;
+          right: 0;
+          transform: translate(45%, -45%) scale(1);
+          z-index: 1;
+          min-width: 20px;
+          height: 20px;
+          padding: 0 5px;
+          background: rgb(127, 0, 255);
           color: white;
-          font-size: 0.65rem;
+          font-size: 0.7rem;
           font-weight: 700;
-          border-radius: 50%;
+          border-radius: 999px;
           display: flex;
           align-items: center;
           justify-content: center;
+          box-shadow: 0 2px 8px rgba(255, 0, 85, 0.3);
+          border: 2px solid #fbf7ff;
+          animation: badge-appear 0.3s ease-out;
+          pointer-events: none;
         }
+        @keyframes badge-appear {
+          0% {
+            transform: translate(45%, -45%) scale(0);
+            opacity: 0;
+          }
+          50% {
+            transform: translate(45%, -45%) scale(1.2);
+          }
+          100% {
+            transform: translate(45%, -45%) scale(1);
+            opacity: 1;
+          }
+        }
+        .navbar-invite-btn {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          padding: 0.5rem 1rem;
+          background: #7000ff;
+          color: white;
+          border: none;
+          border-radius: 10px;
+          font-size: 0.85rem;
+          font-weight: 600;
+          cursor: pointer;
+          transition: background 0.2s;
+        }
+        .navbar-invite-btn:hover { background: #5900cc; }
         .navbar-avatar {
           width: 36px;
           height: 36px;
@@ -173,6 +237,20 @@ export default function Navbar() {
           justify-content: center;
           cursor: pointer;
         }
+        .navbar-invite {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          width: 36px;
+          height: 36px;
+          background: transparent;
+          border: none;
+          color: #4a3870;
+          border-radius: 8px;
+          cursor: pointer;
+          transition: background 0.15s, color 0.15s;
+        }
+        .navbar-invite:hover { background: #f5f0ff; color: #7000ff; }
       `}</style>
     </nav>
   );
