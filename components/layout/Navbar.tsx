@@ -23,7 +23,9 @@ export default function Navbar() {
 
         {/* Search */}
         <div className="navbar-search">
-          <Search size={16} className="navbar-search-icon" />
+          <span className="navbar-search-icon" aria-hidden="true">
+            <Search size={16} />
+          </span>
           <input
             type="text"
             placeholder="Search products..."
@@ -112,6 +114,11 @@ export default function Navbar() {
           z-index: 2;
           color: #9b8cc4;
           pointer-events: none;
+          z-index: 1;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          line-height: 0;
         }
         .navbar-search-input {
           width: 100%;
@@ -126,6 +133,8 @@ export default function Navbar() {
           outline: none;
           transition: border-color 0.2s, box-shadow 0.2s;
           box-shadow: 0 8px 28px rgba(112, 0, 255, 0.06);
+          position: relative;
+          z-index: 0;
         }
         .navbar-search-input:focus {
           border-color: #7000ff;
@@ -143,7 +152,7 @@ export default function Navbar() {
         .navbar-link {
           font-size: 0.9rem;
           font-weight: 500;
-          color: #4a3870;
+          :global(.navbar-search-icon) {
           text-decoration: none;
           transition: color 0.2s;
         }
@@ -180,6 +189,7 @@ export default function Navbar() {
           height: 20px;
           padding: 0 5px;
           background: rgb(127, 0, 255);
+          background: #7000ff;
           color: white;
           font-size: 0.7rem;
           font-weight: 700;
