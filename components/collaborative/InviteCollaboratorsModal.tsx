@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { X, Mail, Users, Check } from 'lucide-react';
 import { useInviteStore } from '@/lib/invite-store';
+import { useAuthStore } from '@/lib/auth-store';
 import { mockCurrentUser } from '@/data/users';
 import { Collaborator } from '@/types';
 
@@ -31,6 +32,8 @@ export default function InviteCollaboratorsModal({
 
   // members: show collaborators from the invite store
   const members: Collaborator[] = store.collaborators;
+  const authUser = useAuthStore((s) => s.user);
+  const isOwner = !!(useInviteStore.getState().createdBy && authUser && useInviteStore.getState().createdBy?.id === authUser.id);
 
   if (!isOpenFinal) return null;
 
@@ -57,7 +60,8 @@ export default function InviteCollaboratorsModal({
     useInviteStore.getState().setShopName(cartName);
     // if createdBy/createdAt not set, set them to current user and now
     const st = useInviteStore.getState();
-    if (!st.createdBy) useInviteStore.getState().setCreatedBy(mockCurrentUser);
+    const authUser = useAuthStore.getState().user;
+    if (!st.createdBy) useInviteStore.getState().setCreatedBy(authUser ?? mockCurrentUser);
     if (!st.createdAt) useInviteStore.getState().setCreatedAt(new Date().toISOString());
   };
 
@@ -140,6 +144,15 @@ export default function InviteCollaboratorsModal({
               <div className="invite-avatar">{m.user.initials}</div>
               <span className="invite-email">{m.user.name}</span>
               <span className="member-status">{m.status.toUpperCase()}</span>
+              {isOwner && (
+                <button
+                  className="remove-invite"
+                  title="Remove collaborator"
+                  onClick={() => useInviteStore.getState().removeCollaborator(m.user.email)}
+                >
+                  <X size={14} />
+                </button>
+              )}
             </div>
           ))}
         </div>

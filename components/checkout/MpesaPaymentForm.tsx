@@ -27,10 +27,12 @@ export default function MpesaPaymentForm({ amount, orderId, onSuccess }: MpesaPa
     setMessage('Sending STK push to your phone...');
 
     try {
+      // Prepend country code since the UI shows +254 as a separate prefix
+      const fullPhone = phone.startsWith('254') ? phone : `254${phone}`;
       const res = await fetch('/api/mpesa/stk-push', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phoneNumber: phone, amount, orderId }),
+        body: JSON.stringify({ phoneNumber: fullPhone, amount, orderId }),
       });
 
       const data = await res.json();

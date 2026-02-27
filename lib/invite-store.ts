@@ -14,7 +14,11 @@ interface InviteStore {
   setShopName: (name: string) => void;
   setCreatedBy: (user?: User) => void;
   setCreatedAt: (iso?: string) => void;
-  addCollaborators: (emails: string[]) => void;
+  addCollaborators: (emails: string[]) => Promise<void>;
+  acceptInvite: (email: string, user?: User) => void;
+  declineInvite: (email: string) => void;
+  removeCollaborator: (email: string) => Promise<void>;
+  syncFromServer: (shopId?: string) => Promise<void>;
   reset: () => void;
 }
 
@@ -32,9 +36,17 @@ export const useInviteStore = create<InviteStore>()(
       setShopName: (name: string) => set({ shopName: name }),
       setCreatedBy: (user?: User) => set({ createdBy: user }),
       setCreatedAt: (iso?: string) => set({ createdAt: iso }),
-      addCollaborators: (emails: string[]) => {
-        const existing = get().invitedEmails;
-        const newEmails = emails.filter((e) => !existing.includes(e));
+      addCollaborators: async (emails: string[]) => {
+        const existingInvited = get().invitedEmails;
+        const existingCollabs = get().collaborators;
+        const existingCollabEmails = new Set(existingCollabs.map((c) => c.user.email));
+
+        // filter out emails already invited or already collaborators
+        const newEmails = emails.filter(
+          (e) => !existingInvited.includes(e) && !existingCollabEmails.has(e)
+        );
+        if (newEmails.length === 0) return;
+
         const newCollabs: Collaborator[] = newEmails.map((email) => ({
           user: {
             id: `invited-${email}`,
@@ -44,10 +56,97 @@ export const useInviteStore = create<InviteStore>()(
           },
           status: 'pending' as const,
         }));
+
         set({
-          invitedEmails: [...existing, ...newEmails],
-          collaborators: [...get().collaborators, ...newCollabs],
+          invitedEmails: [...existingInvited, ...newEmails],
+          collaborators: [...existingCollabs, ...newCollabs],
         });
+
+        // Persist invites server-side
+        try {
+          await fetch('/api/collaborators', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ shopId: useInviteStore.getState().shopName || null, emails: newEmails }),
+          });
+        } catch (err) {
+          console.warn('Failed to persist invites', err);
+        }
+      },
+      acceptInvite: (email: string, user?: User) => {
+        const existingInvited = get().invitedEmails;
+        const newInvited = existingInvited.filter((e) => e !== email);
+
+        const replacedUser: User =
+          user ?? {
+            id: `user-${email}`,
+            name: email.split('@')[0],
+            email,
+            initials: email.slice(0, 2).toUpperCase(),
+          };
+
+        const collaborators = get().collaborators.slice();
+        let found = false;
+        for (let i = 0; i < collaborators.length; i++) {
+          const c = collaborators[i];
+          if (c.user.email === email || c.user.id === `invited-${email}`) {
+            collaborators[i] = { user: replacedUser, status: 'active' as const };
+            found = true;
+          }
+        }
+        if (!found) {
+          collaborators.push({ user: replacedUser, status: 'active' });
+        }
+
+        set({ invitedEmails: newInvited, collaborators });
+      },
+      declineInvite: (email: string) => {
+        const newInvited = get().invitedEmails.filter((e) => e !== email);
+        const collaborators = get().collaborators.filter(
+          (c) => c.user.email !== email && c.user.id !== `invited-${email}`
+        );
+        set({ invitedEmails: newInvited, collaborators });
+      },
+      removeCollaborator: async (email: string) => {
+        // Owner removal: remove collaborator (whether pending or active) and any invited marker
+        const collaborators = get().collaborators.filter(
+          (c) => c.user.email !== email && c.user.id !== `invited-${email}`
+        );
+        const invitedEmails = get().invitedEmails.filter((e) => e !== email);
+        set({ collaborators, invitedEmails });
+        // Persist removal server-side
+        try {
+          await fetch('/api/collaborators', {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ shopId: useInviteStore.getState().shopName || null, email }),
+          });
+        } catch (err) {
+          console.warn('Failed to remove collaborator server-side', err);
+        }
+      },
+
+      // Sync local invite/collab state with server for a given shopId
+      // Returns the synced state
+      syncFromServer: async (shopId?: string) => {
+        if (!shopId) return;
+        try {
+          const res = await fetch(`/api/collaborators?shopId=${encodeURIComponent(shopId)}`);
+          const data = await res.json();
+          const serverCollabs = (data.collaborators ?? []).map((c: any) => ({
+            user: {
+              id: c.profiles?.id ?? c.user_id ?? `user-${c.user_id}`,
+              name: c.profiles?.name ?? c.user_id,
+              email: c.profiles?.email ?? null,
+              initials: c.profiles?.initials ?? (c.profiles?.name ? c.profiles.name.slice(0,2).toUpperCase() : '??'),
+            },
+            status: c.status ?? 'pending',
+          }));
+          const serverInvites = (data.invites ?? []).map((i: any) => i.email);
+          set({ collaborators: serverCollabs, invitedEmails: serverInvites, shopName: shopId });
+        } catch (err) {
+          console.warn('Failed to sync invites from server', err);
+        }
       },
       reset: () =>
         set({
