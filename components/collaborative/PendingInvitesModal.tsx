@@ -19,11 +19,15 @@ export default function PendingInvitesModal() {
   if (!authUser) return null;
 
   // find pending invites that target the logged-in user's email
-  const pendingByEmail = invitedEmails.includes(authUser.email);
-  const pendingByCollaborator = collaborators.find(
-    (c) => c.status === 'pending' && c.user.email === authUser.email
-  );
-  const hasPending = pendingByEmail || Boolean(pendingByCollaborator);
+  const userEmail = authUser.email?.toLowerCase().trim();
+  const pendingByEmail = invitedEmails.some((e) => e?.toLowerCase().trim() === userEmail);
+  const pendingByCollaborator = collaborators.find((c) => {
+    const cEmail = c.user.email?.toLowerCase?.().trim?.();
+    // also support placeholder invited-<email> ids
+    const isInvitedId = typeof c.user.id === 'string' && c.user.id === `invited-${userEmail}`;
+    return c.status === 'pending' && (cEmail === userEmail || isInvitedId);
+  });
+  const hasPending = Boolean(userEmail) && (pendingByEmail || Boolean(pendingByCollaborator));
 
   if (!hasPending) return null;
 

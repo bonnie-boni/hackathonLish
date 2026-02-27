@@ -39,11 +39,12 @@ export const useInviteStore = create<InviteStore>()(
       addCollaborators: async (emails: string[]) => {
         const existingInvited = get().invitedEmails;
         const existingCollabs = get().collaborators;
-        const existingCollabEmails = new Set(existingCollabs.map((c) => c.user.email));
+        const existingCollabEmails = new Set(existingCollabs.map((c) => (c.user.email || '').toLowerCase().trim()));
 
-        // filter out emails already invited or already collaborators
-        const newEmails = emails.filter(
-          (e) => !existingInvited.includes(e) && !existingCollabEmails.has(e)
+        // normalize incoming emails and filter out already invited/collaborators
+        const normalized = emails.map((e) => e.toLowerCase().trim());
+        const newEmails = normalized.filter(
+          (e) => e && !existingInvited.map((x) => x.toLowerCase().trim()).includes(e) && !existingCollabEmails.has(e)
         );
         if (newEmails.length === 0) return;
 
