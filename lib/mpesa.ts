@@ -58,9 +58,13 @@ export async function initiateStkPush({
   const password = generatePassword(timestamp);
 
   // Format phone number: remove leading 0 or +254 and ensure starts with 254
-  const formattedPhone = phoneNumber
+  let formattedPhone = phoneNumber
+    .replace(/\s+/g, '')
     .replace(/^\+/, '')
     .replace(/^0/, '254');
+  if (!formattedPhone.startsWith('254')) {
+    formattedPhone = `254${formattedPhone}`;
+  }
 
   const payload = {
     BusinessShortCode: BUSINESS_SHORT_CODE,

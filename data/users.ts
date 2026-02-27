@@ -2,17 +2,16 @@ import { User, CollaborativeShop } from '@/types';
 
 export const mockCurrentUser: User = {
   id: 'user-1',
-  name: 'Alex Johnson',
-  email: 'alex@example.com',
-  initials: 'AJ',
+  name: 'D Marto',
+  email: 'marto@example.com',
+  initials: 'MJ',
 };
 
 export const mockUsers: User[] = [
-  { id: 'user-1', name: 'Alex Johnson', email: 'alex@example.com', initials: 'AJ' },
-  { id: 'user-2', name: 'Jordan Smith', email: 'jordan@example.com', initials: 'JS' },
-  { id: 'user-3', name: 'Taylor Morgan', email: 'taylor@example.com', initials: 'TM' },
-  { id: 'user-4', name: 'Casey Lee', email: 'casey@example.com', initials: 'CL' },
-  { id: 'user-5', name: 'Riley Davis', email: 'riley@example.com', initials: 'RD' },
+  { id: 'user-1', name: 'Marto', email: 'marto@example.com', initials: 'MJ' },
+  { id: 'user-3', name: 'Wangui', email: 'wangui@example.com', initials: 'WS' },
+  { id: 'user-2', name: 'Bonnie', email: 'bonnie@example.com', initials: 'BM' },
+  { id: 'user-4', name: 'Sydney', email: 'sydney@example.com', initials: 'SL' },
 ];
 
 export const mockCollaborativeShop: CollaborativeShop = {
@@ -25,7 +24,6 @@ export const mockCollaborativeShop: CollaborativeShop = {
     { user: mockUsers[1], status: 'active' },
     { user: mockUsers[2], status: 'active' },
     { user: mockUsers[3], status: 'pending' },
-    { user: mockUsers[4], status: 'pending' },
   ],
   cartTotal: 325.00,
   cartGoal: 500.00,
@@ -68,7 +66,9 @@ export const mockCollaborativeShop: CollaborativeShop = {
   ],
 };
 
-export const mockLoginCredentials = {
-  email: 'alex@example.com',
-  password: 'password123',
-};
+export const mockLoginCredentials = [
+  { email: 'marto@example.com', password: 'password123', user: mockUsers[0] },
+  { email: 'bonnie@example.com', password: 'password123', user: mockUsers[2] },
+  { email: 'wangui@example.com', password: 'password123', user: mockUsers[1] },
+  { email: 'sydney@example.com', password: 'password123', user: mockUsers[3] },
+];

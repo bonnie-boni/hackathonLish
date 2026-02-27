@@ -12,6 +12,10 @@ interface ProductCardProps {
 
 export default function ProductCard({ product }: ProductCardProps) {
   const addItem = useCartStore((s) => s.addItem);
+  const items = useCartStore((s) => s.items);
+  const updateQuantity = useCartStore((s) => s.updateQuantity);
+  const cartItem = items.find((i) => i.product.id === product.id);
+  const quantity = cartItem?.quantity ?? 0;
 
   const badgeColors: Record<string, string> = {
     NEW: '#00b894',
@@ -41,13 +45,31 @@ export default function ProductCard({ product }: ProductCardProps) {
         </div>
         <p className="product-desc">{product.description}</p>
 
-        <button
-          className="product-btn"
-          onClick={() => addItem(product)}
-        >
-          <ShoppingCart size={16} />
-          Add to Cart
-        </button>
+        {quantity === 0 ? (
+          <button
+            className="product-btn"
+            onClick={() => addItem(product)}
+          >
+            <ShoppingCart size={16} />
+            Add to Cart
+          </button>
+        ) : (
+          <div className="qty-controls">
+            <button
+              className="qty-btn"
+              onClick={() => updateQuantity(product.id, quantity - 1)}
+            >
+              −
+            </button>
+            <span className="qty-value">{quantity}</span>
+            <button
+              className="qty-btn qty-btn-add"
+              onClick={() => addItem(product)}
+            >
+              +
+            </button>
+          </div>
+        )}
       </div>
 
       <style jsx>{`
@@ -142,6 +164,38 @@ export default function ProductCard({ product }: ProductCardProps) {
         }
         .product-btn:active {
           transform: scale(0.98);
+        }
+        .qty-controls {
+          display: flex;
+          align-items: center;
+          gap: 0;
+          border: 1.5px solid #e8e0ff;
+          border-radius: 10px;
+          overflow: hidden;
+        }
+        .qty-btn {
+          width: 40px;
+          height: 38px;
+          background: #f8f5ff;
+          border: none;
+          font-size: 1.1rem;
+          font-weight: 700;
+          color: #7000ff;
+          cursor: pointer;
+          transition: background 0.15s;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        .qty-btn:hover { background: #ede8ff; }
+        .qty-btn-add { color: #00b894; }
+        .qty-btn-add:hover { background: #e8fff4; }
+        .qty-value {
+          flex: 1;
+          text-align: center;
+          font-size: 0.95rem;
+          font-weight: 700;
+          color: #1a0533;
         }
       `}</style>
     </div>

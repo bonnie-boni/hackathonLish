@@ -3,11 +3,14 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ShoppingCart, Eye, EyeOff, Mail, Lock } from 'lucide-react';
-import { mockLoginCredentials } from '@/data/users';
+import { mockLoginCredentials, mockUsers } from '@/data/users';
 import { createClient } from '@/lib/supabase/client';
+import { useAuthStore } from '@/lib/auth-store';
+import { useInviteStore } from '@/lib/invite-store';
 
 export default function LoginPage() {
   const router = useRouter();
+  const login = useAuthStore((s) => s.login);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -27,29 +30,52 @@ export default function LoginPage() {
 
       if (authError) {
         // Fallback to mock credentials for demo
-        if (
-          email === mockLoginCredentials.email &&
-          password === mockLoginCredentials.password
-        ) {
+        const cred = mockLoginCredentials.find(
+          (c) => c.email === email && c.password === password
+        );
+        if (cred) {
+          login(cred.user);
+          // Sync invites/collaborators from server for the stored shop (if any)
+          try {
+            const shopId = useInviteStore.getState().shopName;
+            if (shopId) await useInviteStore.getState().syncFromServer(shopId);
+          } catch (e) {
+            /* ignore */
+          }
           router.push('/shop');
           return;
         }
-        setError('Invalid email or password. Try alex@example.com / password123');
+        setError('Invalid email or password. Try any demo account below.');
         setLoading(false);
         return;
+      }
+
+      // On successful auth, sync invite state from server
+      try {
+        const shopId = useInviteStore.getState().shopName;
+        if (shopId) await useInviteStore.getState().syncFromServer(shopId);
+      } catch (e) {
+        /* ignore */
       }
 
       router.push('/shop');
     } catch {
       // Fallback to mock credentials
-      if (
-        email === mockLoginCredentials.email &&
-        password === mockLoginCredentials.password
-      ) {
+      const cred = mockLoginCredentials.find(
+        (c) => c.email === email && c.password === password
+      );
+      if (cred) {
+        login(cred.user);
+        try {
+          const shopId = useInviteStore.getState().shopName;
+          if (shopId) await useInviteStore.getState().syncFromServer(shopId);
+        } catch (e) {
+          /* ignore */
+        }
         router.push('/shop');
         return;
       }
-      setError('Invalid email or password. Try alex@example.com / password123');
+      setError('Invalid email or password. Try any demo account below.');
       setLoading(false);
     }
   };
@@ -120,7 +146,22 @@ export default function LoginPage() {
         </div>
 
         <div className="demo-hint">
-          <strong>Demo credentials:</strong> alex@example.com / password123
+          <strong>Demo accounts</strong> (password: <code>password123</code>)
+          <div className="demo-accounts">
+            {mockLoginCredentials.map((c) => (
+              <button
+                key={c.email}
+                className="demo-account-btn"
+                onClick={() => { setEmail(c.email); setPassword(c.password); }}
+              >
+                <span className="demo-avatar">{c.user.initials}</span>
+                <span className="demo-info">
+                  <span className="demo-name">{c.user.name}</span>
+                  <span className="demo-email">{c.email}</span>
+                </span>
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -252,6 +293,61 @@ export default function LoginPage() {
           font-size: 0.78rem;
           color: #7a6898;
           text-align: center;
+        }
+        .demo-hint code {
+          background: #f0e8ff;
+          padding: 1px 5px;
+          border-radius: 4px;
+          font-size: 0.76rem;
+        }
+        .demo-accounts {
+          display: flex;
+          flex-direction: column;
+          gap: 0.4rem;
+          margin-top: 0.5rem;
+        }
+        .demo-account-btn {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          width: 100%;
+          padding: 0.4rem 0.6rem;
+          background: white;
+          border: 1px solid #e8e0ff;
+          border-radius: 8px;
+          cursor: pointer;
+          transition: border-color 0.15s, background 0.15s;
+          text-align: left;
+        }
+        .demo-account-btn:hover {
+          border-color: #7000ff;
+          background: #f8f5ff;
+        }
+        .demo-avatar {
+          width: 28px;
+          height: 28px;
+          background: #e8d8ff;
+          color: #7000ff;
+          font-size: 0.65rem;
+          font-weight: 700;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-shrink: 0;
+        }
+        .demo-info {
+          display: flex;
+          flex-direction: column;
+        }
+        .demo-name {
+          font-size: 0.78rem;
+          font-weight: 600;
+          color: #1a0533;
+        }
+        .demo-email {
+          font-size: 0.7rem;
+          color: #9b8cc4;
         }
       `}</style>
     </div>
