@@ -1,7 +1,7 @@
 "use client";
 
 import Link from 'next/link';
-import { ShoppingCart, Search, LogOut } from 'lucide-react';
+import { ShoppingCart, LogOut } from 'lucide-react';
 import { openInviteCollaborators } from '@/components/shop/inviteCollaborators';
 import { useCartStore } from '@/lib/cart-store';
 import { useAuthStore } from '@/lib/auth-store';
@@ -80,7 +80,6 @@ export default function Navbar() {
 
         {/* Search */}
         <div className="navbar-search">
-          <Search size={16} className="navbar-search-icon" />
           <input
             type="text"
             placeholder="Search products..."
@@ -170,19 +169,10 @@ export default function Navbar() {
           margin: 0 auto;
           display: block;
         }
-        .navbar-search-icon {
-         position: absolute;
-          left: 16px; /* a bit more inset to sit nicely inside the input */
-          top:50%;
-          transform: translateY(-50%);
-          z-index: 2;
-          color: #9b8cc4;
-          pointer-events: none;
-        }
         .navbar-search-input {
           width: 100%;
           height: 44px;
-          padding-left: 44px;
+          padding-left: 16px;
           padding-right: 16px;
           background: #f8f5ff;
           border: 1px solid #e9e2ff;
