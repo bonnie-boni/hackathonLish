@@ -86,7 +86,7 @@ modernshop/
 | Route | Page | Description |
 |-------|------|-------------|
 | `/` | Root | Redirects to login |
-| `/auth/login` | Login | Mock login (alex@example.com / password123) |
+| `/auth/login` | Login | Mock login (alex@gmail.com / password123) |
 | `/shop` | Shop | Product grid with category filters |
 | `/collaborative-shop` | Collab Shop | Shared shopping with invite popup |
 | `/receipts` | Receipts | Order history with e-receipt viewer |

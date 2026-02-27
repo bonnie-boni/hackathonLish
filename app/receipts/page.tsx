@@ -5,17 +5,41 @@ import Navbar from '@/components/layout/Navbar';
 import ReceiptCard from '@/components/receipts/ReceiptCard';
 import EReceiptModal from '@/components/receipts/EReceiptModal';
 import { mockOrders } from '@/data/orders';
-import { fetchOrders } from '@/lib/supabase/queries';
-import { Order } from '@/types';
+import { Order, OrderItem } from '@/types';
 
 export default function ReceiptsPage() {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [orders, setOrders] = useState<Order[]>(mockOrders);
 
   useEffect(() => {
-    fetchOrders().then((data) => {
-      if (data.length > 0) setOrders(data);
-    });
+    fetch('/api/orders')
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data) && data.length > 0) {
+          const dbOrders: Order[] = data.map((row: any) => ({
+            id: row.id,
+            orderNumber: row.order_number ?? row.orderNumber ?? '',
+            date: row.date ?? '',
+            time: row.time ?? '',
+            status: row.status,
+            subtotal: Number(row.subtotal),
+            shipping: Number(row.shipping),
+            tax: Number(row.tax),
+            total: Number(row.total),
+            thumbnail: row.thumbnail ?? '',
+            items: (row.order_items ?? row.items ?? []).map((oi: any): OrderItem => ({
+              id: oi.id ?? '',
+              name: oi.name,
+              quantity: oi.quantity,
+              price: Number(oi.price),
+              icon: oi.icon ?? 'default',
+            })),
+          }));
+          // Show real DB orders first, then mock orders at the bottom
+          setOrders([...dbOrders, ...mockOrders]);
+        }
+      })
+      .catch((err) => console.error('Failed to fetch orders:', err));
   }, []);
 
   return (

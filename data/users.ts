@@ -3,15 +3,15 @@ import { User, CollaborativeShop } from '@/types';
 export const mockCurrentUser: User = {
   id: 'user-1',
   name: 'D Marto',
-  email: 'marto@example.com',
+  email: 'marto@gmail.com',
   initials: 'MJ',
 };
 
 export const mockUsers: User[] = [
-  { id: 'user-1', name: 'Marto', email: 'marto@example.com', initials: 'MJ' },
-  { id: 'user-3', name: 'Wangui', email: 'wangui@example.com', initials: 'WS' },
-  { id: 'user-2', name: 'Bonnie', email: 'bonnie@example.com', initials: 'BM' },
-  { id: 'user-4', name: 'Sydney', email: 'sydney@example.com', initials: 'SL' },
+  { id: 'user-1', name: 'Marto', email: 'marto@gmail.com', initials: 'MJ' },
+  { id: 'user-3', name: 'Wangui', email: 'josphinekimani819@gmail.com', initials: 'WS' },
+  { id: 'user-2', name: 'Bonnie', email: 'bonnie@gmail.com', initials: 'BM' },
+  { id: 'user-4', name: 'Sydney', email: 'sydney@gmail.com', initials: 'SL' },
 ];
 
 export const mockCollaborativeShop: CollaborativeShop = {
@@ -67,8 +67,8 @@ export const mockCollaborativeShop: CollaborativeShop = {
 };
 
 export const mockLoginCredentials = [
-  { email: 'marto@example.com', password: 'password123', user: mockUsers[0] },
-  { email: 'bonnie@example.com', password: 'password123', user: mockUsers[2] },
-  { email: 'wangui@example.com', password: 'password123', user: mockUsers[1] },
-  { email: 'sydney@example.com', password: 'password123', user: mockUsers[3] },
+  { email: 'marto@gmail.com', password: 'password123', user: mockUsers[0] },
+  { email: 'bonnie@gmail.com', password: 'password123', user: mockUsers[2] },
+  { email: 'josphinekimani819@gmail.com', password: 'password123', user: mockUsers[1] },
+  { email: 'sydney@gmail.com', password: 'password123', user: mockUsers[3] },
 ];

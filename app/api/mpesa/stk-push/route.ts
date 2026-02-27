@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { initiateStkPush } from '@/lib/mpesa';
-import { createServiceClient } from '@/lib/supabase/service';
+import { connectDB } from '@/lib/mongodb/connection';
+import { MpesaTransaction } from '@/lib/mongodb/models/MpesaTransaction';
 
 export async function POST(req: NextRequest) {
   try {
@@ -15,18 +16,18 @@ export async function POST(req: NextRequest) {
 
     const result = await initiateStkPush({ phoneNumber, amount, orderId });
 
-    // Persist the STK push request in Supabase
+    // Persist the STK push request in MongoDB
     try {
-      const supabase = createServiceClient();
-      await supabase.from('mpesa_transactions').insert({
-        order_id: null, // will be linked when we have an order UUID
-        checkout_request_id: result.CheckoutRequestID ?? null,
-        merchant_request_id: result.MerchantRequestID ?? null,
-        phone_number: phoneNumber,
+      await connectDB();
+      await MpesaTransaction.create({
+        orderId: null,
+        checkoutRequestId: result.CheckoutRequestID ?? null,
+        merchantRequestId: result.MerchantRequestID ?? null,
+        phoneNumber,
         amount,
         status: 'pending',
       });
-    } catch (dbErr) {
+    } catch (dbErr: any) {
       console.error('Failed to save mpesa transaction:', dbErr);
     }
 

@@ -108,7 +108,7 @@ export default function InviteCollaboratorsModal({
               <Mail size={15} className="input-icon" />
               <input
                 type="email"
-                placeholder="colleague@example.com"
+                placeholder="colleague@gmail.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleAddInvite()}

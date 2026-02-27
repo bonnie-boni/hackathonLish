@@ -151,8 +151,127 @@ export default function OrderConfirmationEmail({
 }
 
 // Helper to generate HTML string for sending via email service
-export function renderOrderConfirmationEmail(order: Order, customerName: string): string {
-  // In production, use react-dom/server renderToStaticMarkup
-  // or React Email's render utility
-  return `<!-- Order Confirmation Email for ${customerName} - Order #${order.id} -->`;
+// Accepts either a typed Order or a raw DB row (snake_case fields).
+export function renderOrderConfirmationEmail(orderInput: any, customerName: string): string {
+  // Normalize: accept both camelCase Order and snake_case DB row
+  const order = {
+    id: orderInput.id ?? '',
+    orderNumber: orderInput.orderNumber ?? orderInput.order_number ?? orderInput.id ?? '',
+    date: orderInput.date ?? '',
+    items: (orderInput.items ?? orderInput.order_items ?? []).map((i: any) => ({
+      name: i.name ?? 'Item',
+      quantity: i.quantity ?? 1,
+      price: Number(i.price ?? 0),
+    })),
+    subtotal: Number(orderInput.subtotal ?? 0),
+    shipping: Number(orderInput.shipping ?? 0),
+    tax: Number(orderInput.tax ?? 0),
+    total: Number(orderInput.total ?? 0),
+  };
+  const itemsHtml = order.items
+    .map(
+      (item: any) => `
+        <tr>
+          <td style="width:40px"><div style="width:40px;height:40px;background:#f0e8ff;border-radius:10px;display:flex;align-items:center;justify-content:center">📦</div></td>
+          <td style="padding-left:12px">
+            <p style="font-size:14px;font-weight:600;color:#1a0533;margin:0 0 2px">${escapeHtml(item.name)}</p>
+            <p style="font-size:12px;color:#9b8cc4;margin:0">Qty: ${item.quantity}</p>
+          </td>
+          <td align="right">
+            <p style="font-size:14px;font-weight:600;color:#1a0533;margin:0">KES ${Number(item.price).toFixed(2)}</p>
+          </td>
+        </tr>
+      `
+    )
+    .join('');
+
+  const html = `<!doctype html>
+  <html>
+    <head>
+      <meta charset="utf-8" />
+      <title>Order Confirmation - ModernShop</title>
+    </head>
+    <body style="margin:0;padding:0;font-family:Arial, sans-serif;background:#f5f0ff">
+      <table width="100%" cellpadding="0" cellspacing="0" style="background:#f5f0ff;padding:40px 20px">
+        <tr><td align="center">
+          <table width="560" cellpadding="0" cellspacing="0" style="background:white;border-radius:16px;overflow:hidden">
+            <tr><td style="background:#7000ff;padding:40px;text-align:center">
+              <div style="width:56px;height:56px;background:rgba(255,255,255,0.2);border-radius:50%;margin:0 auto 16px;display:flex;align-items:center;justify-content:center">
+                <span style="color:white;font-size:28px">✓</span>
+              </div>
+              <h1 style="color:white;font-size:24px;font-weight:800;margin:0 0 8px">Order Confirmed!</h1>
+              <p style="color:rgba(255,255,255,0.85);font-size:14px;margin:0">Hi ${escapeHtml(
+                customerName
+              )}, we've received your order.</p>
+            </td></tr>
+
+            <tr><td style="padding:24px 32px 0">
+              <table width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td>
+                    <p style="font-size:11px;font-weight:700;color:#9b8cc4;text-transform:uppercase;letter-spacing:0.08em;margin:0 0 4px">ORDER ID</p>
+                    <p style="font-size:15px;font-weight:700;color:#1a0533;margin:0">#${escapeHtml(order.orderNumber ?? order.id)}</p>
+                  </td>
+                  <td align="right">
+                    <p style="font-size:11px;font-weight:700;color:#9b8cc4;text-transform:uppercase;letter-spacing:0.08em;margin:0 0 4px">ORDER DATE</p>
+                    <p style="font-size:15px;font-weight:700;color:#1a0533;margin:0">${escapeHtml(order.date ?? '')}</p>
+                  </td>
+                </tr>
+              </table>
+            </td></tr>
+
+            <tr><td style="padding:20px 32px">
+              <h2 style="font-size:16px;font-weight:700;color:#1a0533;margin:0 0 16px">Order Items</h2>
+              <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:12px">${itemsHtml}</table>
+            </td></tr>
+
+            <tr><td style="padding:0 32px 16px">
+              <div style="background:#fdfaff;border-radius:12px;padding:16px;border:1px solid #f0eeff">
+                <table width="100%" cellpadding="0" cellspacing="0">
+                  <tr>
+                    <td style="font-size:13px;color:#7a6898;padding-bottom:6px">Subtotal</td>
+                    <td align="right" style="font-size:13px;color:#7a6898;padding-bottom:6px">KES ${Number(order.subtotal ?? 0).toFixed(2)}</td>
+                  </tr>
+                  <tr>
+                    <td style="font-size:13px;color:#7a6898;padding-bottom:6px">Shipping</td>
+                    <td align="right" style="font-size:13px;color:#00b894;font-weight:600;padding-bottom:6px">${order.shipping === 0 ? 'FREE' : 'KES ' + Number(order.shipping).toFixed(2)}</td>
+                  </tr>
+                  <tr>
+                    <td style="font-size:13px;color:#7a6898;padding-bottom:12px">Tax (8%)</td>
+                    <td align="right" style="font-size:13px;color:#7a6898;padding-bottom:12px">KES ${Number(order.tax ?? 0).toFixed(2)}</td>
+                  </tr>
+                  <tr style="border-top:1px solid #e8e0ff">
+                    <td style="font-size:16px;font-weight:700;color:#1a0533;padding-top:12px">Total</td>
+                    <td align="right" style="font-size:18px;font-weight:800;color:#7000ff;padding-top:12px">KES ${Number(order.total ?? 0).toFixed(2)}</td>
+                  </tr>
+                </table>
+              </div>
+            </td></tr>
+
+            <tr><td style="padding:0 32px 32px;text-align:center">
+              <a href="https://modernshop.app/receipts" style="display:inline-block;background:#7000ff;color:white;padding:12px 32px;border-radius:10px;text-decoration:none;font-weight:700;font-size:15px">View Your Receipt</a>
+            </td></tr>
+
+            <tr><td style="background:#fdfaff;padding:20px 32px;border-top:1px solid #f0eeff;text-align:center">
+              <p style="font-size:12px;color:#9b8cc4;margin:0">© 2024 ModernShop. All rights reserved. | <a href="#" style="color:#7000ff;text-decoration:none">Unsubscribe</a></p>
+            </td></tr>
+
+          </table>
+        </td></tr>
+      </table>
+    </body>
+  </html>`;
+
+  return html;
+}
+
+// small helper to escape HTML entities
+function escapeHtml(str: any) {
+  if (str === null || str === undefined) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
 }

@@ -8,24 +8,43 @@ const BUSINESS_SHORT_CODE = process.env.MPESA_SHORTCODE || '174379';
 const PASSKEY = process.env.MPESA_PASSKEY || '';
 const CALLBACK_URL = process.env.MPESA_CALLBACK_URL || 'https://yourdomain.com/api/mpesa/callback';
 
+// In-memory cache for M-Pesa access token to avoid frequent token requests
+let cachedAccessToken: string | null = null;
+let cachedAccessTokenExpiry = 0; // epoch ms
+
 export async function getMpesaAccessToken(): Promise<string> {
-  const auth = Buffer.from(`${CONSUMER_KEY}:${CONSUMER_SECRET}`).toString('base64');
-
-  const response = await fetch(
-    `${DARAJA_BASE_URL}/oauth/v1/generate?grant_type=client_credentials`,
-    {
-      headers: {
-        Authorization: `Basic ${auth}`,
-      },
-    }
-  );
-
-  if (!response.ok) {
-    throw new Error('Failed to get M-Pesa access token');
+  // Dev mock: return a fake token when MPESA_MOCK is enabled to avoid hitting Daraja
+  if (process.env.MPESA_MOCK === 'true') {
+    return 'mock-access-token';
+  }
+  // Return cached token if still valid
+  if (cachedAccessToken && Date.now() < cachedAccessTokenExpiry) {
+    return cachedAccessToken;
+  }
+  if (!CONSUMER_KEY || !CONSUMER_SECRET) {
+    throw new Error('Missing MPESA_CONSUMER_KEY or MPESA_CONSUMER_SECRET env vars');
   }
 
-  const data = await response.json();
-  return data.access_token;
+  const auth = Buffer.from(`${CONSUMER_KEY}:${CONSUMER_SECRET}`).toString('base64');
+
+  const url = `${DARAJA_BASE_URL}/oauth/v1/generate?grant_type=client_credentials`;
+  const response = await fetch(url, { headers: { Authorization: `Basic ${auth}` } });
+
+  if (!response.ok) {
+    const text = await safeReadResponseText(response);
+    throw new Error(`Failed to get M-Pesa access token: ${response.status} ${response.statusText} - ${truncate(text, 1000)}`);
+  }
+
+  const data = await safeParseJson(response);
+  // Cache token with expiry (daraja usually returns expires_in in seconds)
+  try {
+    const expiresIn = Number(data?.expires_in) || 3500;
+    cachedAccessToken = data?.access_token;
+    cachedAccessTokenExpiry = Date.now() + Math.max(60, expiresIn - 60) * 1000; // subtract safety margin
+  } catch (e) {
+    // ignore cache if parsing fails
+  }
+  return data?.access_token;
 }
 
 export function generateTimestamp(): string {
@@ -53,6 +72,17 @@ export async function initiateStkPush({
   amount: number;
   orderId: string;
 }) {
+  // If in dev mock mode, simulate a successful STK push initiation
+  if (process.env.MPESA_MOCK === 'true') {
+    const mockCheckout = `MOCK-CHECKOUT-${Date.now()}`;
+    return {
+      ResponseCode: '0',
+      ResponseDescription: 'Success. Request accepted for processing',
+      CheckoutRequestID: mockCheckout,
+      MerchantRequestID: `MOCK-MR-${Date.now()}`,
+    } as any;
+  }
+
   const accessToken = await getMpesaAccessToken();
   const timestamp = generateTimestamp();
   const password = generatePassword(timestamp);
@@ -93,14 +123,29 @@ export async function initiateStkPush({
   );
 
   if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.errorMessage || 'STK Push failed');
+    const text = await safeReadResponseText(response);
+    // Try to parse JSON for an M-Pesa error message, otherwise include raw text
+    let parsed: any = null;
+    try {
+      parsed = JSON.parse(text);
+    } catch {}
+    const msg = parsed?.errorMessage || parsed?.error || text || 'STK Push failed';
+    throw new Error(`STK Push failed: ${response.status} ${response.statusText} - ${truncate(msg, 1000)}`);
   }
 
-  return response.json();
+  return safeParseJson(response);
 }
 
 export async function queryStkPushStatus(checkoutRequestId: string) {
+  // Dev mock: immediately return success for mocked checkout requests
+  if (process.env.MPESA_MOCK === 'true') {
+    return {
+      ResultCode: '0',
+      ResultDesc: 'The service request is processed successfully.',
+      CheckoutRequestID: checkoutRequestId,
+    };
+  }
+
   const accessToken = await getMpesaAccessToken();
   const timestamp = generateTimestamp();
   const password = generatePassword(timestamp);
@@ -123,6 +168,33 @@ export async function queryStkPushStatus(checkoutRequestId: string) {
       body: JSON.stringify(payload),
     }
   );
+  if (!response.ok) {
+    const text = await safeReadResponseText(response);
+    throw new Error(`STK status query failed: ${response.status} ${response.statusText} - ${truncate(text, 1000)}`);
+  }
 
-  return response.json();
+  return safeParseJson(response);
+}
+
+async function safeParseJson(res: Response) {
+  // Read the body as text first so it's not consumed twice
+  const text = await safeReadResponseText(res);
+  try {
+    return JSON.parse(text);
+  } catch (e) {
+    throw new Error('Failed to parse JSON response from M-Pesa: ' + truncate(text, 2000));
+  }
+}
+
+async function safeReadResponseText(res: Response) {
+  try {
+    return await res.text();
+  } catch (e: any) {
+    return String(e?.message || e || '');
+  }
+}
+
+function truncate(s: string, n = 500) {
+  if (!s) return s;
+  return s.length > n ? s.slice(0, n) + '...' : s;
 }

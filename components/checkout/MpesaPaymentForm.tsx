@@ -2,14 +2,23 @@
 
 import { useState } from 'react';
 import { Smartphone, CheckCircle, AlertCircle } from 'lucide-react';
+import { mockCurrentUser } from '@/data/users';
 
 interface MpesaPaymentFormProps {
   amount: number;
   orderId: string;
+  items?: any[];
+  subtotal?: number;
+  shipping?: number;
+  tax?: number;
+  total?: number;
+  userEmail?: string;
   onSuccess: () => void;
 }
 
-export default function MpesaPaymentForm({ amount, orderId, onSuccess }: MpesaPaymentFormProps) {
+export default function MpesaPaymentForm({ amount, orderId, items, subtotal, shipping, tax, total, userEmail, onSuccess }: MpesaPaymentFormProps) {
+  // Always have an email — fall back to mock user if none provided
+  const resolvedEmail = userEmail || mockCurrentUser.email;
   const [phone, setPhone] = useState('');
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState<'idle' | 'pending' | 'success' | 'error'>('idle');
@@ -54,9 +63,10 @@ export default function MpesaPaymentForm({ amount, orderId, onSuccess }: MpesaPa
 
   const pollStatus = async (checkoutRequestId: string) => {
     let attempts = 0;
+    const maxAttempts = 24; // ~2 minutes at 5s intervals
     const interval = setInterval(async () => {
       attempts++;
-      if (attempts > 12) {
+      if (attempts > maxAttempts) {
         clearInterval(interval);
         setStatus('error');
         setMessage('Payment timed out. Please try again.');
@@ -72,13 +82,75 @@ export default function MpesaPaymentForm({ amount, orderId, onSuccess }: MpesaPa
         });
         const data = await res.json();
 
-        if (data.ResultCode === '0') {
+        // Still pending — keep polling
+        if (String(data.ResultCode) === 'pending') return;
+
+        if (String(data.ResultCode) === '0') {
           clearInterval(interval);
           setStatus('success');
           setMessage('Payment successful!');
           setLoading(false);
+          try {
+            // Create order server-side and link the mpesa transaction
+            if (typeof window !== 'undefined') {
+              // Create order
+              // Flatten cart items: { product: { name, price, ... }, quantity } → { name, price, quantity }
+              const flatItems = (items ?? []).map((ci: any) => {
+                const prod = ci.product ?? ci;
+                return {
+                  name: prod.name,
+                  quantity: ci.quantity ?? 1,
+                  price: Number(prod.price),
+                  icon: prod.icon ?? prod.image ?? null,
+                };
+              });
+
+              const orderRes = await fetch('/api/orders', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  orderNumber: orderId,
+                  userId: null,
+                  userEmail: resolvedEmail,
+                  items: flatItems,
+                  subtotal: subtotal ?? 0,
+                  shipping: shipping ?? 0,
+                  tax: tax ?? 0,
+                  total: total ?? 0,
+                }),
+              });
+
+              const orderJson = await orderRes.json();
+
+              if (!orderRes.ok) {
+                console.error('Order creation failed:', orderJson.error || orderJson);
+              }
+
+              const createdOrderId = orderJson.id;
+
+              if (createdOrderId) {
+                // Link mpesa transaction to order + create payment/receipt/email
+                const linkHeaders: Record<string, string> = { 'Content-Type': 'application/json' };
+                linkHeaders['x-user-email'] = resolvedEmail;
+                const linkRes = await fetch('/api/mpesa/link', {
+                  method: 'POST',
+                  headers: linkHeaders,
+                  body: JSON.stringify({ checkoutRequestId, orderId: createdOrderId }),
+                });
+                const linkJson = await linkRes.json();
+                if (!linkRes.ok) {
+                  console.error('Link/complete failed:', linkJson.error || linkJson);
+                } else {
+                  console.log('Payment linked, receipt created:', linkJson);
+                }
+              }
+            }
+          } catch (err) {
+            console.warn('Failed to create/link order after payment', err);
+          }
+
           setTimeout(onSuccess, 1200);
-        } else if (data.ResultCode && data.ResultCode !== '0') {
+        } else if (data.ResultCode !== undefined && String(data.ResultCode) !== '0') {
           clearInterval(interval);
           setStatus('error');
           setMessage(data.ResultDesc || 'Payment was cancelled.');

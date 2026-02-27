@@ -50,6 +50,6 @@ export const useCartStore = create<CartStore>()(
       subtotal: () =>
         get().items.reduce((acc, i) => acc + i.product.price * i.quantity, 0),
     }),
-    { name: 'modernshop-cart' }
+    { name: 'e-Shop-cart' }
   )
 );

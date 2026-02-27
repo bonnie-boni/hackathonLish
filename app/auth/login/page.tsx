@@ -4,7 +4,6 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ShoppingCart, Eye, EyeOff, Mail, Lock } from 'lucide-react';
 import { mockLoginCredentials, mockUsers } from '@/data/users';
-import { createClient } from '@/lib/supabase/client';
 import { useAuthStore } from '@/lib/auth-store';
 import { useInviteStore } from '@/lib/invite-store';
 
@@ -22,50 +21,13 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const supabase = createClient();
-      const { error: authError } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (authError) {
-        // Fallback to mock credentials for demo
-        const cred = mockLoginCredentials.find(
-          (c) => c.email === email && c.password === password
-        );
-        if (cred) {
-          login(cred.user);
-          // Sync invites/collaborators from server for the stored shop (if any)
-          try {
-            const shopId = useInviteStore.getState().shopName;
-            if (shopId) await useInviteStore.getState().syncFromServer(shopId);
-          } catch (e) {
-            /* ignore */
-          }
-          router.push('/shop');
-          return;
-        }
-        setError('Invalid email or password. Try any demo account below.');
-        setLoading(false);
-        return;
-      }
-
-      // On successful auth, sync invite state from server
-      try {
-        const shopId = useInviteStore.getState().shopName;
-        if (shopId) await useInviteStore.getState().syncFromServer(shopId);
-      } catch (e) {
-        /* ignore */
-      }
-
-      router.push('/shop');
-    } catch {
-      // Fallback to mock credentials
+      // Use mock credentials for demo login
       const cred = mockLoginCredentials.find(
         (c) => c.email === email && c.password === password
       );
       if (cred) {
         login(cred.user);
+        // Sync invites/collaborators from server for the stored shop (if any)
         try {
           const shopId = useInviteStore.getState().shopName;
           if (shopId) await useInviteStore.getState().syncFromServer(shopId);
@@ -76,6 +38,9 @@ export default function LoginPage() {
         return;
       }
       setError('Invalid email or password. Try any demo account below.');
+      setLoading(false);
+    } catch {
+      setError('Something went wrong. Please try again.');
       setLoading(false);
     }
   };
@@ -102,7 +67,7 @@ export default function LoginPage() {
               <Mail size={16} className="input-icon" />
               <input
                 type="email"
-                placeholder="you@example.com"
+                placeholder="you@gmail.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="field-input"

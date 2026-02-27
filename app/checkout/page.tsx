@@ -10,9 +10,13 @@ import { useCartStore } from '@/lib/cart-store';
 import { calculateTax, generateOrderId } from '@/lib/utils';
 import { useInviteStore } from '@/lib/invite-store';
 import { useAuthStore } from '@/lib/auth-store';
+import { mockCurrentUser } from '@/data/users';
 
 export default function CheckoutPage() {
   const router = useRouter();
+  const authUser = useAuthStore((s) => s.user);
+  // Always have a user email — fall back to mock user if not logged in
+  const activeUser = authUser ?? mockCurrentUser;
   const items = useCartStore((s) => s.items);
   const clearCart = useCartStore((s) => s.clearCart);
   const [orderId] = useState(generateOrderId());
@@ -21,7 +25,7 @@ export default function CheckoutPage() {
   // Use KSh 1 per item for checkout totals to match OrderSummary
   const PRICE_PER_ITEM = 1;
   const subtotal = items.reduce((acc, i) => acc + PRICE_PER_ITEM * i.quantity, 0);
-  const shipping = subtotal >= 400 ? 0 : 5.99;
+  const shipping = subtotal >= 400 ? 0 : 0;
   const tax = calculateTax(subtotal);
   const total = subtotal + shipping + tax;
 
@@ -98,6 +102,12 @@ export default function CheckoutPage() {
             <MpesaPaymentForm
               amount={Math.round(total)}
               orderId={orderId}
+              items={items}
+              subtotal={subtotal}
+              shipping={shipping}
+              tax={tax}
+              total={total}
+              userEmail={activeUser.email}
               onSuccess={handleSuccess}
             />
           </div>

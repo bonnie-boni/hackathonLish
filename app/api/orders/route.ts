@@ -1,67 +1,80 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createServiceClient } from '@/lib/supabase/service';
+import { connectDB } from '@/lib/mongodb/connection';
+import { Order as OrderModel } from '@/lib/mongodb/models/Order';
 
 export async function GET() {
-  const supabase = createServiceClient();
+  try {
+    await connectDB();
+    const orders = await OrderModel.find().sort({ createdAt: -1 }).lean();
 
-  const { data, error } = await supabase
-    .from('orders')
-    .select(`
-      *,
-      order_items(*)
-    `)
-    .order('created_at', { ascending: false });
+    const mapped = orders.map((row: any) => ({
+      id: row._id.toString(),
+      order_number: row.orderNumber,
+      date: row.date,
+      time: row.time,
+      status: row.status,
+      subtotal: row.subtotal,
+      shipping: row.shipping,
+      tax: row.tax,
+      total: row.total,
+      thumbnail: row.thumbnail,
+      user_id: row.userId,
+      order_items: (row.items ?? []).map((i: any) => ({
+        id: i._id?.toString() ?? '',
+        name: i.name,
+        quantity: i.quantity,
+        price: i.price,
+        icon: i.icon,
+      })),
+    }));
 
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json(mapped);
+  } catch (err: any) {
+    return NextResponse.json({ error: err.message }, { status: 500 });
   }
-
-  return NextResponse.json(data);
 }
 
 export async function POST(req: NextRequest) {
-  const supabase = createServiceClient();
-
   try {
+    await connectDB();
     const body = await req.json();
-    const { orderNumber, userId, items, subtotal, shipping, tax, total, thumbnail } = body;
+    const { orderNumber, userId, userEmail, items, subtotal, shipping, tax, total, thumbnail } = body;
 
-    const { data: order, error } = await supabase
-      .from('orders')
-      .insert({
-        order_number: orderNumber,
-        user_id: userId ?? null,
-        date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-        time: new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }),
-        status: 'PROCESSING',
-        subtotal,
-        shipping,
-        tax,
-        total,
-        thumbnail: thumbnail ?? null,
-      })
-      .select('id')
-      .single();
-
-    if (error || !order) {
-      return NextResponse.json({ error: error?.message || 'Failed to create order' }, { status: 500 });
+    // Try to resolve user by email if userId not provided
+    let resolvedUserId: string | null = userId ?? null;
+    if (!resolvedUserId && userEmail) {
+      const { Profile } = await import('@/lib/mongodb/models/Profile');
+      const profile = await Profile.findOne({ email: userEmail }).lean();
+      resolvedUserId = profile ? (profile._id as any).toString() : null;
     }
 
-    // Insert order items
-    if (items && items.length > 0) {
-      const orderItems = items.map((item: any) => ({
-        order_id: order.id,
-        name: item.name,
-        quantity: item.quantity,
-        price: item.price,
-        icon: item.icon ?? null,
-      }));
+    const order = await OrderModel.create({
+      orderNumber,
+      userId: resolvedUserId,
+      userEmail: userEmail ?? null,
+      date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+      time: new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }),
+      status: 'PROCESSING',
+      items: (items ?? []).map((item: any) => {
+        // Support both flat { name, price } and nested CartItem { product: { name, price }, quantity }
+        const prod = item.product ?? item;
+        return {
+          name: prod.name,
+          quantity: item.quantity ?? 1,
+          price: Number(prod.price),
+          icon: prod.icon ?? prod.image ?? null,
+        };
+      }),
+      subtotal,
+      shipping,
+      tax,
+      total,
+      thumbnail: thumbnail ?? null,
+    });
 
-      await supabase.from('order_items').insert(orderItems);
-    }
-
-    return NextResponse.json({ id: order.id });
+    return NextResponse.json({ id: order._id.toString() });
   } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    console.error('Order insert error:', err);
+    return NextResponse.json({ error: err.message || 'Failed to create order' }, { status: 500 });
   }
 }

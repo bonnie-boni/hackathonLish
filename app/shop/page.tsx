@@ -7,7 +7,6 @@ import InviteCollaboratorsModal from '@/components/collaborative/InviteCollabora
 import { mockProducts } from '@/data/products';
 import { mockCurrentUser } from '@/data/users';
 import { useAuthStore } from '@/lib/auth-store';
-import { fetchProducts } from '@/lib/supabase/queries';
 import { useInviteStore } from '@/lib/invite-store';
 import { useCartStore } from '@/lib/cart-store';
 import { Product } from '@/types';
@@ -30,9 +29,12 @@ export default function ShopPage() {
   const hasInvited = !!shopName;
 
   useEffect(() => {
-    fetchProducts().then((data) => {
-      if (data.length > 0) setProducts(data);
-    });
+    fetch('/api/products')
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data) && data.length > 0) setProducts(data);
+      })
+      .catch((err) => console.error('Failed to fetch products:', err));
   }, []);
 
   const title = hasInvited ? shopName : undefined;
