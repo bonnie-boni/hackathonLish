@@ -1,14 +1,72 @@
-'use client';
+"use client";
 
 import Link from 'next/link';
-import { ShoppingCart, Search } from 'lucide-react';
+import { ShoppingCart, Search, LogOut } from 'lucide-react';
 import { openInviteCollaborators } from '@/components/shop/inviteCollaborators';
 import { useCartStore } from '@/lib/cart-store';
+import { useAuthStore } from '@/lib/auth-store';
 import { mockCurrentUser } from '@/data/users';
+import PendingInvitesModal from '@/components/collaborative/PendingInvitesModal';
+import { useRouter } from 'next/navigation';
+import { useEffect, useRef } from 'react';
+import { useInviteStore } from '@/lib/invite-store';
 
 export default function Navbar() {
   const totalItems = useCartStore((s) => s.totalItems)();
+  const authUser = useAuthStore((s) => s.user);
+  const logout = useAuthStore((s) => s.logout);
+  const currentUser = authUser ?? mockCurrentUser;
+  const router = useRouter();
 
+  const handleLogout = () => {
+    logout();
+    router.push('/auth/login');
+  };
+
+  // Redirect a user to /shop if they were removed from the collaboration
+  const collaborators = useInviteStore((s) => s.collaborators);
+  const prevIsMemberRef = useRef<boolean | null>(null);
+
+  useEffect(() => {
+    if (!authUser) return;
+    const isMember = collaborators.some(
+      (c) => c.user.email === authUser.email || c.user.id === authUser.id
+    );
+
+    // initialize previous state
+    if (prevIsMemberRef.current === null) {
+      prevIsMemberRef.current = isMember;
+      return;
+    }
+
+    // if previously a member but now not, redirect them to products page
+    if (prevIsMemberRef.current === true && isMember === false) {
+      router.push('/shop');
+    }
+
+    prevIsMemberRef.current = isMember;
+  }, [collaborators, authUser, router]);
+
+  // Also listen for storage events so removals in another tab/window
+  // (persisted via localStorage by zustand) redirect this client to /shop.
+  useEffect(() => {
+    const handler = (e: StorageEvent) => {
+      if (e.key !== 'modernshop-invite') return;
+      if (!authUser) return;
+      try {
+        const next = e.newValue ? JSON.parse(e.newValue) : null;
+        const nextCollabs: any[] = next?.state?.collaborators ?? [];
+        const isMember = nextCollabs.some(
+          (c) => c.user?.email === authUser.email || c.user?.id === authUser.id
+        );
+        if (!isMember) router.push('/shop');
+      } catch {
+        // ignore parse errors
+      }
+    };
+    window.addEventListener('storage', handler);
+    return () => window.removeEventListener('storage', handler);
+  }, [authUser, router]);
   return (
     <nav className="navbar">
       <div className="navbar-inner">
@@ -57,9 +115,13 @@ export default function Navbar() {
             </span>
           </Link>
 
-          <div className="navbar-avatar">
-            {mockCurrentUser.initials}
+          <div className="navbar-avatar" title={currentUser.name}>
+            {currentUser.initials}
           </div>
+          <button className="navbar-logout-btn" onClick={handleLogout} title="Sign out">
+            <LogOut size={16} />
+          </button>
+          <PendingInvitesModal />
         </div>
       </div>
 
@@ -251,6 +313,24 @@ export default function Navbar() {
           transition: background 0.15s, color 0.15s;
         }
         .navbar-invite:hover { background: #f5f0ff; color: #7000ff; }
+        .navbar-logout-btn {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          width: 36px;
+          height: 36px;
+          background: transparent;
+          border: 1px solid #e8e0ff;
+          color: #7a6898;
+          border-radius: 10px;
+          cursor: pointer;
+          transition: background 0.15s, color 0.15s, border-color 0.15s;
+        }
+        .navbar-logout-btn:hover {
+          background: #fff5f5;
+          color: #e17055;
+          border-color: #ffc5b8;
+        }
       `}</style>
     </nav>
   );

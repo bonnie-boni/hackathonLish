@@ -6,6 +6,7 @@ import CollaboratorsSidebar from '@/components/collaborative/CollaboratorsSideba
 import InviteCollaboratorsModal from '@/components/collaborative/InviteCollaboratorsModal';
 import { mockProducts } from '@/data/products';
 import { mockCurrentUser } from '@/data/users';
+import { useAuthStore } from '@/lib/auth-store';
 import { fetchProducts } from '@/lib/supabase/queries';
 import { useInviteStore } from '@/lib/invite-store';
 import { useCartStore } from '@/lib/cart-store';
@@ -19,7 +20,8 @@ export default function ShopPage() {
   const subtotal = useCartStore((s) => s.subtotal)();
 
   // Build the owner as the first collaborator
-  const owner = createdBy ?? mockCurrentUser;
+  const authUser = useAuthStore((s) => s.user);
+  const owner = createdBy ?? authUser ?? mockCurrentUser;
   const allCollaborators = [
     { user: owner, status: 'active' as const },
     ...collaborators,

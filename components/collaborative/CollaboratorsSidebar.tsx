@@ -2,6 +2,9 @@
 
 import { Collaborator } from '@/types';
 import { formatCurrency } from '@/lib/utils';
+import { useInviteStore } from '@/lib/invite-store';
+import { useAuthStore } from '@/lib/auth-store';
+import { Trash2 } from 'lucide-react';
 
 interface CollaboratorsListProps {
   collaborators: Collaborator[];
@@ -17,6 +20,12 @@ export default function CollaboratorsSidebar({
   onManagePermissions,
 }: CollaboratorsListProps) {
   const progress = Math.min((cartTotal / cartGoal) * 100, 100);
+  const authUser = useAuthStore((s) => s.user);
+  const createdBy = useInviteStore((s) => s.createdBy);
+  const isOwner = !!(createdBy && authUser && createdBy.id === authUser.id);
+
+  // Hide the sidebar if there's only one user (the owner) in the collaborative cart
+  if (!collaborators || collaborators.length <= 1) return null;
 
   return (
     <aside className="sidebar">
@@ -43,6 +52,15 @@ export default function CollaboratorsSidebar({
               <div className="collab-info">
                 <span className="collab-name">{c.user.name}</span>
               </div>
+              {isOwner && (
+                <button
+                  className="remove-collab"
+                  title={`Remove ${c.user.name}`}
+                  onClick={() => useInviteStore.getState().removeCollaborator(c.user.email)}
+                >
+                  <Trash2 size={14} />
+                </button>
+              )}
             </li>
           ))}
         </ul>
@@ -124,6 +142,7 @@ export default function CollaboratorsSidebar({
           display: flex;
           align-items: center;
           gap: 0.75rem;
+          position: relative;
         }
         .collab-avatar {
           width: 38px;
@@ -156,6 +175,21 @@ export default function CollaboratorsSidebar({
           font-weight: 600;
           color: #1a0533;
         }
+        .remove-collab {
+          margin-left: auto;
+          background: transparent;
+          border: none;
+          width: 34px;
+          height: 34px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 8px;
+          color: #e17055;
+          cursor: pointer;
+          transition: background 0.12s;
+        }
+        .remove-collab:hover { background: rgba(225, 90, 90, 0.06); }
         /* roles removed; collaborators are shown without role labels */
         .manage-btn {
           width: 100%;

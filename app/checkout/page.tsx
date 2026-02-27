@@ -8,6 +8,8 @@ import OrderSummary from '@/components/checkout/OrderSummary';
 import MpesaPaymentForm from '@/components/checkout/MpesaPaymentForm';
 import { useCartStore } from '@/lib/cart-store';
 import { calculateTax, generateOrderId } from '@/lib/utils';
+import { useInviteStore } from '@/lib/invite-store';
+import { useAuthStore } from '@/lib/auth-store';
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -25,6 +27,20 @@ export default function CheckoutPage() {
 
   const handleSuccess = () => {
     clearCart();
+    // If this checkout is for a collaborative shopping session and the current
+    // user is the host/creator, dissolve the collaboration and return to the
+    // products page. Otherwise, go to receipts as usual.
+    const createdBy = useInviteStore.getState().createdBy;
+    const authUser = useAuthStore.getState().user;
+
+    if (createdBy && authUser && createdBy.id === authUser.id) {
+      // Host completed checkout: reset the invite/collaboration state
+      useInviteStore.getState().reset();
+      setOrderPlaced(true);
+      setTimeout(() => router.push('/shop'), 1200);
+      return;
+    }
+
     setOrderPlaced(true);
     setTimeout(() => router.push('/receipts'), 2000);
   };
