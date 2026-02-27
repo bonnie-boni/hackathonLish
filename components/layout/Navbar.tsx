@@ -49,10 +49,12 @@ export default function Navbar() {
           </Link>
 
           <Link href="/checkout" className="navbar-cart">
-            <ShoppingCart size={20} />
-            {totalItems > 0 && (
-              <span className="navbar-cart-badge">{totalItems}</span>
-            )}
+            <span className="navbar-cart-icon" aria-hidden="true">
+              <ShoppingCart size={20} />
+              {totalItems > 0 && (
+                <span className="navbar-cart-badge">{totalItems}</span>
+              )}
+            </span>
           </Link>
 
           <div className="navbar-avatar">
@@ -100,23 +102,26 @@ export default function Navbar() {
           box-shadow: 0 6px 18px rgba(112, 0, 255, 0.12);
         }
         .navbar-search {
-          flex: 1;
-          max-width: 720px; /* allow wider centered search */
           position: relative;
-          margin: 0 auto; /* center visually between logo and actions */
-          align-self: center; /* don't stretch to full header height */
+          flex: 1;
+          max-width: 720px;
+          margin: 0 auto;
+          display: block;
         }
         .navbar-search-icon {
-          position: absolute;
-          left: 18px; /* a bit more inset to sit nicely inside the input */
-          top: 50%;
+         position: absolute;
+          left: 16px; /* a bit more inset to sit nicely inside the input */
+          top:50%;
           transform: translateY(-50%);
+          z-index: 2;
           color: #9b8cc4;
           pointer-events: none;
         }
         .navbar-search-input {
           width: 100%;
-          padding: 0.7rem 1.1rem 0.7rem 3rem;
+          height: 44px;
+          padding-left: 44px;
+          padding-right: 16px;
           background: #f8f5ff;
           border: 1px solid #e9e2ff;
           border-radius: 999px;
@@ -151,12 +156,19 @@ export default function Navbar() {
         }
         .navbar-cart {
           position: relative;
-          color: #4a3870;
+          color: #7000ff;
           display: flex;
           align-items: center;
+          justify-content: center;
           padding: 0.4rem;
           border-radius: 50%;
           transition: background 0.2s, transform 0.12s;
+        }
+        .navbar-cart-icon {
+          position: relative;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
         }
         .navbar-cart:active { transform: translateY(1px); }
         .navbar-cart:hover {
@@ -164,20 +176,38 @@ export default function Navbar() {
         }
         .navbar-cart-badge {
           position: absolute;
-          top: -6px;
-          right: -6px;
-          min-width: 18px;
-          height: 18px;
-          padding: 0 4px;
-          background: #7000ff;
+          top: 0;
+          right: 0;
+          transform: translate(45%, -45%) scale(1);
+          z-index: 1;
+          min-width: 20px;
+          height: 20px;
+          padding: 0 5px;
+          background: rgb(127, 0, 255);
           color: white;
-          font-size: 0.65rem;
+          font-size: 0.7rem;
           font-weight: 700;
-          border-radius: 99px;
+          border-radius: 999px;
           display: flex;
           align-items: center;
           justify-content: center;
-          box-shadow: 0 4px 10px rgba(112,0,255,0.12);
+          box-shadow: 0 2px 8px rgba(255, 0, 85, 0.3);
+          border: 2px solid #fbf7ff;
+          animation: badge-appear 0.3s ease-out;
+          pointer-events: none;
+        }
+        @keyframes badge-appear {
+          0% {
+            transform: translate(45%, -45%) scale(0);
+            opacity: 0;
+          }
+          50% {
+            transform: translate(45%, -45%) scale(1.2);
+          }
+          100% {
+            transform: translate(45%, -45%) scale(1);
+            opacity: 1;
+          }
         }
         .navbar-invite-btn {
           display: flex;
